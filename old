@@ -1,0 +1,32 @@
+CC      = g++
+INCLUDE = -I./include
+FLAGS   = -O3 -std=c++11 -fPIC $(INCLUDE)
+DLFLAGS = -shared $(INCLUDE)
+
+VOXELYZE_NAME = voxelyze
+VOXELYZE_LIB_NAME = lib$(VOXELYZE_NAME).so
+
+SRCS := $(wildcard src/*.cpp)
+OBJS := $(SRCS:src/%.cpp=obj/%.o)
+
+.PHONY: clean all
+
+#dummy target that builds everything for the library
+all: $(VOXELYZE_LIB_NAME)
+
+lib/libvoxelyze.so: $(OBJS)
+    @mkdir -p lib
+    $(CC) $(DLFLAGS) -o $@ $^
+
+obj/%.o: src/%.cpp
+    @mkdir -p obj
+    $(CC) $(FLAGS) -c -o $@ $<
+
+.PHONY: clean
+
+clean:
+    rm -rf obj
+    rm -rf lib
+
+g++ main.cpp -I./include -L.lib -lvoxelyze
+
