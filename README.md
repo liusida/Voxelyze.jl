@@ -5,11 +5,6 @@ Voxelyze is a general purpose multi-material voxel simulation library for static
 [academic](http://creativemachines.cornell.edu/soft-robots), [corporate](http://www.fastcompany.com/3006259/stratasyss-programmable-materials-just-add-water), and [educational](http://www.sciencebuddies.org/science-fair-projects/project_ideas/Robotics_p016.shtml) projects make use of Voxelyze.
 
 
-User guide: [https://github.com/jonhiller/Voxelyze/wiki](https://github.com/jonhiller/Voxelyze/wiki)
-
-Documentation: [http://jonhiller.github.io/Voxelyze/annotated.html](http://jonhiller.github.io/Voxelyze/annotated.html)
-
-
 Basic Usage
 --------
 
@@ -53,12 +48,9 @@ int main()
 }
 ```
 
-For further usage, please refer to the [user guide](https://github.com/jonhiller/Voxelyze/wiki). Complete documentation is avaialable [here](http://jonhiller.github.io/Voxelyze/annotated.html).
-
 Compiling Voxelyze
 --------
 
-The Voxelyze code is structured as a library and compiles on linux and mac. The usual "make" can be executed on linux and mac to build a dynamic shared *.so library.
+The Voxelyze code is structured as a library and compiles on linux and mac. The usual "make" can be executed on linux and mac to build a dynamic shared *.so library. To compile an example as shown above ```clang++ example.cpp -I./include -L.lib -lvoxelyze```
 
 Define "USE_OMP" in the preprocessor to enable multithreaded solving.
-
