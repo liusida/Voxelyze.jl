@@ -51,6 +51,11 @@ int main()
 Compiling Voxelyze
 --------
 
-The Voxelyze code is structured as a library and compiles on linux and mac. The usual "make" can be executed on linux and mac to build a dynamic shared *.so library. To compile an example as shown above ```clang++ example.cpp -I./include -L.lib -lvoxelyze```
+The Voxelyze code is structured as a library and compiles on linux and mac. The usual "make" can be executed on linux and mac to build a dynamic shared *.so library. To compile an example as shown above
+
+```sh
+clang++ example.cpp -I./include -L.lib -lvoxelyze
+./a.out
+```
 
 Define "USE_OMP" in the preprocessor to enable multithreaded solving.
