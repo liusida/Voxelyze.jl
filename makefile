@@ -4,12 +4,12 @@
 USER_HOME_PATH = $(HOME)
 
 VOXELYZE_NAME = voxelyze
-VOXELYZE_LIB_NAME = lib$(VOXELYZE_NAME).so
+VOXELYZE_LIB_NAME = lib$(VOXELYZE_NAME)
 
 CXX=clang++
 CC=clang++
 INCLUDE= -I./include
-FLAGS = -fPIC -O3 -std=c++11 -Wall $(INCLUDE)
+FLAGS = -O3 -std=c++11 -fPIC -Wall $(INCLUDE)
 
 VOXELYZE_SRC = \
 	src/Voxelyze.cpp \
@@ -38,7 +38,7 @@ VOXELYZE_OBJS = \
 .PHONY: clean all
 
 #dummy target that builds everything for the library
-all: $(VOXELYZE_LIB_NAME)
+all: $(VOXELYZE_LIB_NAME).so $(VOXELYZE_LIB_NAME).a
 	
 # Auto sorts out dependencies (but leaves .d files):
 %.o: %.cpp
@@ -48,11 +48,16 @@ all: $(VOXELYZE_LIB_NAME)
 
 -include *.d
 
-$(VOXELYZE_LIB_NAME):	$(VOXELYZE_OBJS)
+# Make shared dynamic library
+$(VOXELYZE_LIB_NAME).so:	$(VOXELYZE_OBJS)
 	$(CC) -shared $(INCLUDE) -o lib/$@ $^
 
+# Make a static library
+$(VOXELYZE_LIB_NAME).a:	$(VOXELYZE_OBJS)
+	ar rcs lib/$(VOXELYZE_LIB_NAME).a $(VOXELYZE_OBJS)
+
 clean:
-	rm -rf *.o */*.o *.d */*.d lib/$(VOXELYZE_LIB_NAME)
+	rm -rf *.o */*.o *.d */*.d lib/$(VOXELYZE_LIB_NAME).a lib/$(VOXELYZE_LIB_NAME).so
 
 ##################################################
 
