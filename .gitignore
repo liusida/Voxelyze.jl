@@ -7,3 +7,4 @@
 *.o
 *.so
 *.user
+*.DS_Store
