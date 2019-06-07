@@ -12,6 +12,10 @@ VxT = Cxx.CxxCore.CppValue{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVox
 pMaterialT = Cxx.CxxCore.CppPtr{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVX_Material},(false, false, false)},(false, false, false)}
 voxelT = Cxx.CxxCore.CppPtr{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVX_Voxel},(false, false, false)},(false, false, false)}
 
+#######################################################
+############## VOXELYZE ENGINE FUNCTIONS ##############
+#######################################################
+
 # Creates an instance of the Voxelyze engine
 function Voxelyze(voxelSize::Real)
 	@cxx CVoxelyze(voxelSize)
@@ -52,10 +56,34 @@ function setAmbientTemperature(Vx::VxT, temperature::Real, allVoxels::Bool)
 	@cxx Vx->setAmbientTemperature(temperature, allVoxels)
 end
 
+
+#######################################################
+################# MATERIAL FUNCTIONS ##################
+#######################################################
+
+
 # Creates a material in the materials pallet and returns pointer to it
 function addMaterial(Vx::VxT, youngsModulus::Real, density::Real)
 	@cxx Vx->addMaterial(youngsModulus, density)
 end
+
+# Sets the color of a given material
+function setColor(pMaterial::pMaterialT, red::Int, green::Int, blue::Int, alpha::Int)
+	@cxx pMaterial->setColor(red, green, blue, alpha)
+end
+
+# Sets the color of a given material
+function setColor(pMaterial::pMaterialT, red::Int, green::Int, blue::Int)
+	@cxx pMaterial->setColor(red, green, blue, 255)
+end
+
+
+
+
+#######################################################
+################### VOXEL FUNCTIONS ###################
+#######################################################
+
 
 # Creates a voxel at 3D coordinates: x y z,  with material properties: pMaterial
 function setVoxel(Vx::VxT, pMaterial::pMaterialT, x::Real, y::Real, z::Real)
@@ -70,4 +98,9 @@ end
 # Creates an external 3D force F on the voxel
 function setForce(voxel::voxelT, Fx::Real, Fy::Real, Fz::Real)
 	@cxx ( @cxx voxel->external() )->setForce(Fx, Fy, Fz)
+end
+
+# Set the temperature of a specific voxel
+function setTemperature(voxel::voxelT, temperature::Real)
+	@cxx voxel->setTemperature(temperature)
 end
