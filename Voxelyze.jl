@@ -27,6 +27,31 @@ function doTimeStep(Vx::VxT, dt::Real)
 	@cxx Vx->doTimeStep(dt)
 end
 
+# Set the gravity of the voxelyze engine
+function setGravity(Vx::VxT, g::Real)
+	@cxx Vx->setGravity(g)
+end
+
+# Enable the floor of the voxelyze engine
+function enableFloor(Vx::VxT, enabled::Bool)
+	@cxx Vx->enableFloor(enabled)
+end
+
+# Enable collisions of the voxelyze engine
+function enableCollisions(Vx::VxT, enabled::Bool)
+	@cxx Vx->enableCollisions(enabled)
+end
+
+# Set the ambient temperature of the voxelyze engine
+function setAmbientTemperature(Vx::VxT, temperature::Real)
+	@cxx Vx->setAmbientTemperature(temperature, true)
+end
+
+# Set the ambient temperature of the current voxelyze instance
+function setAmbientTemperature(Vx::VxT, temperature::Real, allVoxels::Bool)
+	@cxx Vx->setAmbientTemperature(temperature, allVoxels)
+end
+
 # Creates a material in the materials pallet and returns pointer to it
 function addMaterial(Vx::VxT, youngsModulus::Real, density::Real)
 	@cxx Vx->addMaterial(youngsModulus, density)
