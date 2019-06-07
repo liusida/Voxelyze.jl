@@ -6,10 +6,10 @@ USER_HOME_PATH = $(HOME)
 VOXELYZE_NAME = voxelyze
 VOXELYZE_LIB_NAME = lib$(VOXELYZE_NAME)
 
-CXX=clang++
 CC=clang++
+CXX=clang++
 INCLUDE= -I./include
-FLAGS = -O3 -std=c++11 -fPIC -Wall $(INCLUDE)
+FLAGS = -O3 -std=c++14 -fPIC -Wall $(INCLUDE)
 
 VOXELYZE_SRC = \
 	src/Voxelyze.cpp \

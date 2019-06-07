@@ -25,9 +25,12 @@ See <http://www.opensource.org/licenses/lgpl-3.0.html> for license details.
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 
+#include <iostream>
+
 CVoxelyze::CVoxelyze(double voxelSize)
 {
 	clear();
+	std::cout << "Got arguments: " << voxelSize << std::endl;
 	voxSize = voxelSize <= 0 ? DEFAULT_VOXEL_SIZE : voxelSize;
 }
 
@@ -242,6 +245,7 @@ bool CVoxelyze::writeJSON(rapidjson::PrettyWriter<rapidjson::StringBuffer>& w)
 
 bool CVoxelyze::doLinearSolve() //linearizes at current point and solves
 {
+	std::cout << "Doing a linear solve" << std::endl;
 	CVX_LinearSolver solver(this);
 	solver.solve();
 
@@ -250,6 +254,7 @@ bool CVoxelyze::doLinearSolve() //linearizes at current point and solves
 
 bool CVoxelyze::doTimeStep(float dt)
 {
+	std::cout << "Doing time step function: " << dt << std::endl;
 	if (dt==0) return true;
 	else if (dt<0) dt = recommendedTimeStep();
 
@@ -285,6 +290,7 @@ bool CVoxelyze::doTimeStep(float dt)
 
 float CVoxelyze::recommendedTimeStep() const
 {
+	std::cout << "Getting recommended time step" << std::endl;
 	//find the largest natural frequency (sqrt(k/m)) that anything in the simulation will experience, then multiply by 2*pi and invert to get the optimally largest timestep that should retain stability
 	float MaxFreq2 = 0.0f; //maximum frequency in the simulation in rad/sec
 
@@ -312,6 +318,7 @@ float CVoxelyze::recommendedTimeStep() const
 
 void CVoxelyze::resetTime()
 {
+	std::cout << "resetting time" << std::endl;
 	currentTime=0.0f;
 	collisionsStale = true;
 	nearbyStale = true;
@@ -322,6 +329,7 @@ void CVoxelyze::resetTime()
 
 void CVoxelyze::clear() //deallocates and returns everything to defaults (except voxel size)
 {
+	std::cout << "clearing voxelyze objects" << std::endl;
 	//delete and remove links
 	for (std::vector<CVX_Link*>::iterator it = linksList.begin(); it!=linksList.end(); it++) delete *it;
 	for (int i=0; i<3; i++)	links[i].clear();
@@ -356,7 +364,9 @@ void CVoxelyze::clear() //deallocates and returns everything to defaults (except
 
 CVX_Material* CVoxelyze::addMaterial(float youngsModulus, float density)
 {
+	std::cout << "running add material" << std::endl;
 	try {
+		std::cout << "trying to add material" << std::endl;
 		CVX_MaterialVoxel* pMat = new CVX_MaterialVoxel(youngsModulus, density, voxSize);
 		pMat->setGravityMultiplier(grav);
 		voxelMats.push_back(pMat);
@@ -421,6 +431,7 @@ bool CVoxelyze::replaceMaterial(CVX_Material* replaceMe, CVX_Material* replaceWi
 
 CVX_Voxel* CVoxelyze::setVoxel(CVX_Material* material, int xIndex, int yIndex, int zIndex)
 {
+	std::cout << "Setting voxel" << std::endl;
 	if (material == NULL){
 		removeVoxel(xIndex, yIndex, zIndex);
 		return NULL;
@@ -438,6 +449,7 @@ CVX_Voxel* CVoxelyze::setVoxel(CVX_Material* material, int xIndex, int yIndex, i
 
 CVX_Voxel* CVoxelyze::addVoxel(CVX_MaterialVoxel* newVoxelMaterial, int xIndex, int yIndex, int zIndex) //creates a new voxel if there isn't one here. Otherwise
 {
+	std::cout << "adding voxel" << std::endl;
 	try {
 		nearbyStale = collisionsStale = true;
 
@@ -463,6 +475,7 @@ CVX_Voxel* CVoxelyze::addVoxel(CVX_MaterialVoxel* newVoxelMaterial, int xIndex, 
 
 void CVoxelyze::removeVoxel(int xIndex, int yIndex, int zIndex)
 {
+	std::cout << "removing voxel" << std::endl;
 	nearbyStale = collisionsStale = true;
 
 	const CVX_Voxel* pV = voxel(xIndex, yIndex, zIndex);
@@ -584,6 +597,7 @@ bool CVoxelyze::exists(const CVX_MaterialVoxel* toCheck)
 
 void CVoxelyze::setAmbientTemperature(float temperature, bool allVoxels)
 {
+	std::cout << "setting ambientTemperature" << std::endl;
 	ambientTemp = temperature;
 	//for now just set the temperature of each voxel (independent of future
 	if (allVoxels){
@@ -642,6 +656,7 @@ CVX_MaterialLink* CVoxelyze::combinedMaterial(CVX_MaterialVoxel* mat1, CVX_Mater
 
 void CVoxelyze::setVoxelSize(double voxelSize) //sets the voxel size.
 {
+	std::cout << "setting voxel size" << std::endl;
 	double scaleFactor = voxelSize/voxSize; //scaling factor
 	voxSize = voxelSize;
 	
