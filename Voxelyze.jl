@@ -4,7 +4,7 @@ using Libdl
 const path = pwd()
 const path_to_header = path * "/include"
 const path_to_lib = path * "/lib"
-addHeaderDir(path_to_header * "/include", kind=C_User)
+addHeaderDir(path_to_header, kind=C_User)
 Libdl.dlopen(path_to_lib * "/libvoxelyze.so", Libdl.RTLD_GLOBAL)
 cxxinclude("Voxelyze.h")
 

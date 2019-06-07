@@ -75,6 +75,9 @@ julia> ]
 (v1.1) pkg> add Cxx
 (v1.1) pkg> add Libdl
 ```
+```bash
+julia example.jl
+```
 
 To run the c++ example in case you are interested yould do the following:
 ```bash
@@ -88,4 +91,4 @@ Extra Notes
 
 You can switch your compiler in the makefile on line 9 by defining CC=(gcc | g++ | etc), where the default given is CC=clang++
 
-You can also Define "USE_OMP" in the preprocessor to enable multithreaded solving.
+You can also define "USE_OMP" in the preprocessor to enable multithreaded solving by adding the flag -DUSE_OMP=1 on line 11 in the makefile.

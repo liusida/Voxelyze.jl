@@ -7,9 +7,8 @@ VOXELYZE_NAME = voxelyze
 VOXELYZE_LIB_NAME = lib$(VOXELYZE_NAME)
 
 CC=clang++
-CXX=clang++
 INCLUDE= -I./include
-FLAGS = -O3 -std=c++14 -fPIC -Wall $(INCLUDE)
+FLAGS = -std=c++14 -O3 -fPIC $(INCLUDE)
 
 VOXELYZE_SRC = \
 	src/Voxelyze.cpp \
