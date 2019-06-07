@@ -18,17 +18,17 @@ Basic use of Voxelyze consists of five simple steps:
 ```julia
 include("Voxelyze.jl")
 
-Vx = Voxelyze(0.005) 					# 5mm voxels
-pMaterial = addMaterial(Vx, 1000000, 1000) 		# A material with stiffness E=1MPa and density 1000Kg/m^3
-Voxel1 = setVoxel(Vx, pMaterial, 0, 0, 0) 		# Voxel at index x=0, y=0. z=0
+Vx = Voxelyze(0.005)                        # 5mm voxels
+pMaterial = addMaterial(Vx, 1000000, 1000)  # A material with stiffness E=1MPa and density 1000Kg/m^3
+Voxel1 = setVoxel(Vx, pMaterial, 0, 0, 0)   # Voxel at index x=0, y=0. z=0
 Voxel2 = setVoxel(Vx, pMaterial, 1, 0, 0)
-Voxel3 = setVoxel(Vx, pMaterial, 2, 0, 0) 		# Beam extends in the +X direction
+Voxel3 = setVoxel(Vx, pMaterial, 2, 0, 0)   # Beam extends in the +X direction
 
-setFixedAll(Voxel1) 					# Fixes all 6 degrees of freedom with an external condition on Voxel 1
-setForce(Voxel3, 0, 0, -1) 				# Pulls Voxel 3 downward with 1 Newton of force.
+setFixedAll(Voxel1)                         # Fixes all 6 degrees of freedom with an external condition on Voxel 1
+setForce(Voxel3, 0, 0, -1)                  # Pulls Voxel 3 downward with 1 Newton of force.
 
-for i=1:100 						# Simulate 100 timesteps
-	doTimeStep(Vx)
+for i=1:100                                 # Simulate 100 timesteps
+    doTimeStep(Vx)
 end
 ```
 
@@ -39,18 +39,18 @@ This is the equivalent of doing the below in the original Voxelyze library:
 
 int main()
 {
-	CVoxelyze Vx(0.005); 					 //5mm voxels
-	CVX_Material* pMaterial = Vx.addMaterial(1000000, 1000); //A material with stiffness E=1MPa and density 1000Kg/m^3
-	CVX_Voxel* Voxel1 = Vx.setVoxel(pMaterial, 0, 0, 0); 	 //Voxel at index x=0, y=0. z=0
-	CVX_Voxel* Voxel2 = Vx.setVoxel(pMaterial, 1, 0, 0);
-	CVX_Voxel* Voxel3 = Vx.setVoxel(pMaterial, 2, 0, 0); 	 //Beam extends in the +X direction
+    CVoxelyze Vx(0.005);                                      //5mm voxels
+    CVX_Material* pMaterial = Vx.addMaterial(1000000, 1000);  //A material with stiffness E=1MPa and density 1000Kg/m^3
+    CVX_Voxel* Voxel1 = Vx.setVoxel(pMaterial, 0, 0, 0);      //Voxel at index x=0, y=0. z=0
+    CVX_Voxel* Voxel2 = Vx.setVoxel(pMaterial, 1, 0, 0);
+    CVX_Voxel* Voxel3 = Vx.setVoxel(pMaterial, 2, 0, 0);      //Beam extends in the +X direction
 
-	Voxel1->external()->setFixedAll(); 			 //Fixes all 6 degrees of freedom with an external condition on Voxel 1
-	Voxel3->external()->setForce(0, 0, -1); 		 //pulls Voxel 3 downward with 1 Newton of force.
+    Voxel1->external()->setFixedAll();                        //Fixes all 6 degrees of freedom with an external condition on Voxel 1
+    Voxel3->external()->setForce(0, 0, -1);                   //pulls Voxel 3 downward with 1 Newton of force.
 
-	for (int i=0; i<100; i++) Vx.doTimeStep(); 		 //simulate  100 timesteps.
+    for (int i=0; i<100; i++) Vx.doTimeStep();                //simulate  100 timesteps.
 
-	return 0;
+    return 0;
 }
 ```
 
@@ -82,6 +82,6 @@ clang++ example.cpp -I./include -L.lib -lvoxelyze
 
 ### Extra Notes
 
-**CHANGE COMPILER**: On line 9 in the makefile you can define your compiler with CC=(gcc | g++ | etc), where the current is CC=clang++ 
+**CHANGE COMPILER**: On line 4 in the makefile you can define your compiler with CC=(gcc | g++ | etc), where the current is CC=clang++ 
 
-**ENABLE MULTITHREADING**: On line 11 in the makefile you can define "USE_OMP" by adding the flag -DUSE_OMP=1 to the FLAGS variable
+**ENABLE MULTITHREADING**: On line 6 in the makefile you can define "USE_OMP" by adding the flag -DUSE_OMP=1 to the FLAGS variable

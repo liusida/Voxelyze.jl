@@ -1,13 +1,8 @@
-#voxelyze makefile
-
-# This is the directory in which to find subdirectories to install/find headers and libs:
-USER_HOME_PATH = $(HOME)
-
 VOXELYZE_NAME = voxelyze
 VOXELYZE_LIB_NAME = lib$(VOXELYZE_NAME)
 
-CC=clang++
-INCLUDE= -I./include
+CC = clang++
+INCLUDE = -I./include
 FLAGS = -std=c++14 -O3 -fPIC $(INCLUDE)
 
 VOXELYZE_SRC = \
@@ -36,7 +31,7 @@ VOXELYZE_OBJS = \
 		
 .PHONY: clean all
 
-#dummy target that builds everything for the library
+# Dummy target that builds everything for the library
 all: $(VOXELYZE_LIB_NAME).so $(VOXELYZE_LIB_NAME).a
 	
 # Auto sorts out dependencies (but leaves .d files):
@@ -57,35 +52,3 @@ $(VOXELYZE_LIB_NAME).a:	$(VOXELYZE_OBJS)
 
 clean:
 	rm -rf *.o */*.o *.d */*.d lib/$(VOXELYZE_LIB_NAME).a lib/$(VOXELYZE_LIB_NAME).so
-
-##################################################
-
-$(USER_HOME_PATH)/include:
-		mkdir $(USER_HOME_PATH)/include
-
-$(USER_HOME_PATH)/lib:
-		mkdir $(USER_HOME_PATH)/lib
-
-installusr:     $(USER_HOME_PATH)/include $(USER_HOME_PATH)/lib
-		cp lib/$(VOXELYZE_LIB_NAME) $(USER_HOME_PATH)/lib/$(VOXELYZE_LIB_NAME)
-		rm -f $(USER_HOME_PATH)/lib/$(VOXELYZE_LIB_NAME)
-		ln -s lib/$(VOXELYZE_LIB_NAME) $(USER_HOME_PATH)/lib/$(VOXELYZE_LIB_NAME)
-		rm -rf $(USER_HOME_PATH)/include/$(VOXELYZE_NAME)
-		-mkdir $(USER_HOME_PATH)/include/$(VOXELYZE_NAME)
-		cp include/*.h $(USER_HOME_PATH)/include/$(VOXELYZE_NAME)
-		-mkdir $(USER_HOME_PATH)/include/$(VOXELYZE_NAME)/rapidjson
-		cp include/rapidjson/*.h $(USER_HOME_PATH)/include/$(VOXELYZE_NAME)/rapidjson
-		rm -f $(USER_HOME_PATH)/include/$(VOXELYZE_NAME)
-		ln -s $(VOXELYZE_NAME) $(USER_HOME_PATH)/include/$(VOXELYZE_NAME)
-
-installglobal:
-		cp lib/$(VOXELYZE_LIB_NAME) $(GLOBAL_PATH)/lib/$(VOXELYZE_LIB_NAME)
-		rm -f $(GLOBAL_PATH)/lib/$(VOXELYZE_LIB_NAME)
-		ln -s lib/$(VOXELYZE_LIB_NAME) $(GLOBAL_PATH)/lib/$(VOXELYZE_LIB_NAME)
-		rm -rf $(GLOBAL_PATH)/include/$(VOXELYZE_NAME)
-		-mkdir $(GLOBAL_PATH)/include/$(VOXELYZE_NAME)
-		cp include/*.h $(GLOBAL_PATH)/include/$(VOXELYZE_NAME)
-		-mkdir $(GLOBAL_PATH)/include/$(VOXELYZE_NAME)/rapidjson
-		cp include/rapidjson/*.h $(GLOBAL_PATH)/include/$(VOXELYZE_NAME)/rapidjson
-		rm -f $(GLOBAL_PATH)/include/$(VOXELYZE_NAME)
-		ln -s $(VOXELYZE_NAME) $(GLOBAL_PATH)/include/$(VOXELYZE_NAME)

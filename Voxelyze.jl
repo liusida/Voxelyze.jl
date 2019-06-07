@@ -12,6 +12,9 @@ VxT = Cxx.CxxCore.CppValue{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVox
 pMaterialT = Cxx.CxxCore.CppPtr{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVX_Material},(false, false, false)},(false, false, false)}
 voxelT = Cxx.CxxCore.CppPtr{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVX_Voxel},(false, false, false)},(false, false, false)}
 
+
+
+
 #######################################################
 ############## VOXELYZE ENGINE FUNCTIONS ##############
 #######################################################
@@ -57,10 +60,11 @@ function setAmbientTemperature(Vx::VxT, temperature::Real, allVoxels::Bool)
 end
 
 
+
+
 #######################################################
 ################# MATERIAL FUNCTIONS ##################
 #######################################################
-
 
 # Creates a material in the materials pallet and returns pointer to it
 function addMaterial(Vx::VxT, youngsModulus::Real, density::Real)
@@ -83,7 +87,6 @@ end
 #######################################################
 ################### VOXEL FUNCTIONS ###################
 #######################################################
-
 
 # Creates a voxel at 3D coordinates: x y z,  with material properties: pMaterial
 function setVoxel(Vx::VxT, pMaterial::pMaterialT, x::Real, y::Real, z::Real)
