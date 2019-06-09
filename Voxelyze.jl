@@ -155,13 +155,13 @@ function materialCount(pVx::vxT)
 end
 
 # Returns a pointer to a material that has been added to this voxelyze object
-function material(pVx::vxT, materialIndex)
+function material(pVx::vxT, materialIndex::Int)
 	@cxx pVx->material(materialIndex)
 end
 
 # Adds a voxel made of material at the specified index. If a voxel already exists here it is replaced
 function setVoxel(pVx::vxT, pMaterial::materialT, xIndex::Int, yIndex::Int, zIndex::Int)
-	@cxx pVx->setVoxel(pMaterial, x, y, z)
+	@cxx pVx->setVoxel(pMaterial, xIndex, yIndex, zIndex)
 end
 
 # Returns a pointer to the voxel at this location if one exists, or null otherwise
@@ -171,7 +171,7 @@ end
 
 # Returns a pointer to a voxel that has been added to this voxelyze object
 function voxel(pVx::vxT, voxelIndex::Int)
-	@cxx pVx->voxel(xIndex)
+	@cxx pVx->voxel(voxelIndex)
 end
 
 # Returns the number of voxels currently in this voxelyze object
