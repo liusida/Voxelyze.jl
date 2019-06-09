@@ -4,6 +4,7 @@ using Libdl
 
 
 
+
 #######################################################
 ################## LOADING LIBRARY ####################
 #######################################################
@@ -14,6 +15,7 @@ const path_to_lib = path * "/lib"
 addHeaderDir(path_to_header, kind=C_User)
 Libdl.dlopen(path_to_lib * "/libvoxelyze.so", Libdl.RTLD_GLOBAL)
 cxxinclude("Voxelyze.h")
+
 
 
 
@@ -80,6 +82,7 @@ Z_AXIS = @cxx CVX_Link::Z_AXIS 								# Z Axis
 
 
 
+
 #######################################################
 ################# VOXELYZE FUNCTIONS ##################
 #######################################################
@@ -125,6 +128,15 @@ indexMaxX(pVx::vxT) = @cxx pVx->indexMaxX()												# The maximum X index of 
 indexMaxY(pVx::vxT) = @cxx pVx->indexMaxY()												# The maximum Y index of any voxel in this voxelyze object
 indexMaxZ(pVx::vxT) = @cxx pVx->indexMaxZ()												# The maximum Z index of any voxel in this voxelyze object
 
+
+linkCount(pVx::vxT) = @cxx pVx->linkCount()												# Returns the number of links currently in this voxelyze object
+linkList(pVx::vxT) = @cxx pVx->linkList()												# Returns a pointer to the internal list of links in this voxelyze object
+collisionList(pVx::vxT) = @cxx pVx->collisionList()										# Returns a pointer to the internal list of collisions in this voxelyze object
+link(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
+	@cxx pVx->(xIndex, yIndex, zIndex, direction)										# Returns a pointer to the link at this voxel location in the direction indicated if one exists
+link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a pointer to a link that is a part of this voxelyze object
+
+
 setVoxelSize(pVx::vxT, voxelSize::Real) = @cxx pVx->setVoxelSize(voxelSize)				# Sets the base voxel size for the entire voxelyze object
 setGravity(pVx::vxT, g::Real) = @cxx pVx->setGravity(g)									# Set the gravity of the voxelyze engine
 setAmbientTemperature(pVx::vxT, temperature::Real) = 
@@ -133,10 +145,15 @@ setAmbientTemperature(pVx::vxT, temperature::Real, allVoxels::Bool) =
 	@cxx pVx->setAmbientTemperature(temperature, allVoxels)								# Set the ambient temperature of the current voxelyze instance
 enableFloor(pVx::vxT, enabled::Bool) = @cxx pVx->enableFloor(enabled)					# Enable the floor of the voxelyze engine
 enableCollisions(pVx::vxT, enabled::Bool) = @cxx pVx->enableCollisions(enabled)			# Enable collisions of the voxelyze engine
+voxelSize(pVx::vxT) = @cxx pVx->voxelSize()												# Returns the base voxel size in meters
+ambientTemperature(pVx::vxT) = @cxx pVx->ambientTemperature()							# Returns the current relative ambient temperature
+gravity(pVx::vxT) = @cxx pVx->gravity()													# Returns the current gravitational acceleration in g's. 1 g = -9.80665 m/s^2
+isFloorEnabled(pVx::vxT) = @cxx pVx->isFloorEnabled()									# Returns a boolean value indication if the floor is enabled or not
+isCollisionsEnabled(pVx::vxT) = @cxx pVx->isCollisionsEnabled()							# Returns a boolean value indication if the collision watcher is enabled or not
+
 
 stateInfo(pVx::vxT, info::stateInfoType, type::valueType) =
 	@cxx pVx->stateInfo(info, type)														# Returns a specific piece of information about the current state of the simulation
-
 
 
 
