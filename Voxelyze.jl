@@ -1,5 +1,12 @@
+# Voxelyze.jl a wrapper around the Voxelyze Library
 using Cxx
 using Libdl
+
+
+
+#######################################################
+################## LOADING LIBRARY ####################
+#######################################################
 
 const path = pwd()
 const path_to_header = path * "/include"
@@ -37,12 +44,8 @@ MAX = @cxx CVoxelyze::MAX 									# Maximum of all values
 TOTAL = @cxx CVoxelyze::TOTAL 								# Total (sum) of all values
 AVERAGE = @cxx CVoxelyze::AVERAGE 							# Average of all values
 
-
-
 # CVX_Material type
 materialT = Cxx.CxxCore.CppPtr{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVX_Material},(false, false, false)},(false, false, false)}
-
-
 
 # CVX_Voxel type, CVX_Voxel Enum types, and Enums
 voxelT = Cxx.CxxCore.CppPtr{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVX_Voxel},(false, false, false)},(false, false, false)}
@@ -66,8 +69,6 @@ PNN = @cxx CVX_Voxel::PNN 									# 0b100
 PNP = @cxx CVX_Voxel::PNP 									# 0b101
 PPN = @cxx CVX_Voxel::PPN 									# 0b110
 PPP = @cxx CVX_Voxel::PPP 									# 0b111
-
-
 
 # linkT = golbidy goop
 
