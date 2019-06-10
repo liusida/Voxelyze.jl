@@ -114,8 +114,8 @@ material(pVx::vxT, materialIndex::Int) = @cxx pVx->material(materialIndex)				# 
 
 setVoxel(pVx::vxT, pMaterial::materialT, xIndex::Int, yIndex::Int, zIndex::Int) = 
 	@cxx pVx->setVoxel(pMaterial, xIndex, yIndex, zIndex)								# Adds a voxel made of material at the specified index. If a voxel already exists here it is replaced
-voxelCount(pVx::vxT) = @cxx pVx->voxelCount()											# Returns the number of voxels currently in this voxelyze object
-voxelList(pVx::vxT) = @cxx pVx->voxelList()												# Returns a pointer to the internal list of voxels in this voxelyze object
+#voxelCount(pVx::vxT) = @cxx pVx->voxelCount()											# Returns the number of voxels currently in this voxelyze object
+#voxelList(pVx::vxT) = @cxx pVx->voxelList()											# Returns a pointer to the internal list of voxels in this voxelyze object
 voxel(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int) = 
 	@cxx pVx->voxel(xIndex, yIndex, xIndex)												# Returns a pointer to the voxel at this location if one exists, or null otherwise
 voxel(pVx::vxT, voxelIndex::Int) = @cxx pVx->voxel(voxelIndex)							# Returns a pointer to a voxel that has been added to this voxelyze object
@@ -129,12 +129,14 @@ indexMaxY(pVx::vxT) = @cxx pVx->indexMaxY()												# The maximum Y index of 
 indexMaxZ(pVx::vxT) = @cxx pVx->indexMaxZ()												# The maximum Z index of any voxel in this voxelyze object
 
 
-linkCount(pVx::vxT) = @cxx pVx->linkCount()												# Returns the number of links currently in this voxelyze object
-linkList(pVx::vxT) = @cxx pVx->linkList()												# Returns a pointer to the internal list of links in this voxelyze object
-collisionList(pVx::vxT) = @cxx pVx->collisionList()										# Returns a pointer to the internal list of collisions in this voxelyze object
+#linkCount(pVx::vxT) = @cxx pVx->linkCount()											# Returns the number of links currently in this voxelyze object
+#linkList(pVx::vxT) = @cxx pVx->linkList()												# Returns a pointer to the internal list of links in this voxelyze object
+#collisionList(pVx::vxT) = @cxx pVx->collisionList()									# Returns a pointer to the internal list of collisions in this voxelyze object
 link(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
-	@cxx pVx->link(xIndex, yIndex, zIndex, direction)										# Returns a pointer to the link at this voxel location in the direction indicated if one exists
+	@cxx pVx->link(xIndex, yIndex, zIndex, direction)									# Returns a pointer to the link at this voxel location in the direction indicated if one exists
 link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a pointer to a link that is a part of this voxelyze object
+breakLink(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
+	@cxx pVx->breakLink(xIndex, yIndex, zIndex, direction)								# Removes the link at this voxel location in the direction indicated if one exists
 
 
 setVoxelSize(pVx::vxT, voxelSize::Real) = @cxx pVx->setVoxelSize(voxelSize)				# Sets the base voxel size for the entire voxelyze object
@@ -188,6 +190,20 @@ isYielded(pMaterial::materialT, strain::Real) =
 	@cxx pMaterial->isYielded(strain)															# Returns true if the specified strain is past the yield point (if one is specified)
 isFailed(pMaterial, strain::Real) = 
 	@cxx pMaterial->isFailed(strain)															# Returns true if the specified strain is past the failure point (if one is specified)
+
+
+youngsModulus(pMaterial::materialT) = @cxx pMaterial->youngsModulus()							# Returns Youngs modulus in Pa
+yieldStress(pMaterial::materialT) = @cxx pMaterial->yieldStress()								# Returns the yield stress in Pa or -1 if unspecified
+failureStress(pMaterial::materialT) = @cxx pMaterial->failureStress()							# Returns the failure stress in Pa or -1 if unspecified
+modelDataPoints(pMaterial::materialT) = @cxx pMaterial->modelDataPoints()						# Returns the number of data points in the current material model data arrays
+function modelDataStrain(pMaterial::materialT)
+	data = pMaterial->modelDataStrain()
+	unsafe_wrap(Array, data, modelDataPoints(pMaterial))										# Returns a pointer to the first strain value data point in a continuous array. The assumed first value of 0 is included
+end
+function modelDataStress(pMaterial::materialT)
+	data = pMaterial->modelDataStress()
+	unsafe_wrap(Array, data, modelDataPoints(pMaterial))										# Returns a pointer to the first stress value data point in a continuous array. The assumed first value of 0 is included
+end
 
 
 setColor(pMaterial::materialT, red::Int, green::Int, blue::Int, alpha::Int) = 

@@ -107,10 +107,12 @@ public:
 	int indexMinZ() const {return voxels.minIndices().z;} //!< The maximum Y index of any voxel in this voxelyze object. Use to determine limits.
 	int indexMaxZ() const {return voxels.maxIndices().z;} //!< The maximum Z index of any voxel in this voxelyze object. Use to determine limits.
 
+
 	CVX_Link* link(int xIndex, int yIndex, int zIndex, CVX_Voxel::linkDirection direction) const; //!< Returns a pointer to the link at this voxel location in the direction indicated if one exists, or null otherwise. The returned pointer can be safely modified by calling any CVX_Link public member function on it. @param[in] xIndex the X index of the voxel to query. @param[in] yIndex the Y index of the voxel to query. @param[in] zIndex the Z index of the voxel to query. @param direction the direction from the specified voxel to look for a link.
 	int linkCount() const {return linksList.size();} //!< Returns the number of links currently in this voxelyze object.
 	CVX_Link* link(int linkIndex) {return linksList[linkIndex];} //!< Returns a pointer to a link that is a part of this voxelyze object. CVX_Link public member functions can be safely called on this pointer to query the link. A given index may or may not always return the same link - Use link pointers to keep permanent handles to specific voxels. This function is primarily used while iterating through all links in conjuntion with linkCount(). @param[in] linkIndex the current index of a link. Valid range from 0 to linkCount()-1.
 	const std::vector<CVX_Link*>* linkList() const {return &linksList;}  //!< Returns a pointer to the internal list of links in this voxelyze object. In some situations where all links must be iterated over quickly there may be performance gains from iterating directly on the underlying std::vector container accessed with this function.
+	void breakLink(int xIndex, int yIndex, int zIndex, CVX_Voxel::linkDirection direction) { removeLink(xIndex, yIndex, zIndex, direction); }; //!< Removes the link at this voxel location in the direction indicated if one exists
 
 	const std::vector<CVX_Collision*>* collisionList() const {return &collisionsList;} //!< Returns a pointer to the internal list of collisions in this voxelyze object. See CVX_Collision documentation for more information on collision objects.
 
