@@ -25,7 +25,7 @@ cxxinclude("Voxelyze.h")
 
 # CVoxelyze type, CVoxelyze Enum types, and Enums
 vxT = Cxx.CxxCore.CppValue{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVoxelyze},(false, false, false)},480}
-stateInfotype = Cxx.CxxCore.CppEnum{Symbol("CVoxelyze::stateInfoType"),UInt32}
+stateInfoType = Cxx.CxxCore.CppEnum{Symbol("CVoxelyze::stateInfoType"),UInt32}
 valueType = Cxx.CxxCore.CppEnum{Symbol("CVoxelyze::valueType"),UInt32}
 
 # Defines various types of information to query about the state of a voxelyze object
@@ -133,7 +133,7 @@ linkCount(pVx::vxT) = @cxx pVx->linkCount()												# Returns the number of l
 linkList(pVx::vxT) = @cxx pVx->linkList()												# Returns a pointer to the internal list of links in this voxelyze object
 collisionList(pVx::vxT) = @cxx pVx->collisionList()										# Returns a pointer to the internal list of collisions in this voxelyze object
 link(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
-	@cxx pVx->(xIndex, yIndex, zIndex, direction)										# Returns a pointer to the link at this voxel location in the direction indicated if one exists
+	@cxx pVx->link(xIndex, yIndex, zIndex, direction)										# Returns a pointer to the link at this voxel location in the direction indicated if one exists
 link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a pointer to a link that is a part of this voxelyze object
 
 
@@ -162,15 +162,16 @@ stateInfo(pVx::vxT, info::stateInfoType, type::valueType) =
 ################# MATERIAL FUNCTIONS ##################
 #######################################################
 
-Material(youngsModulus::Real, density::Real) = 
-	@cxx CVX_Material(youngsModulus, density)													# Creates a material
 setName(pMaterial::materialT, name::String) = @cxx pMaterial->setName(pointer(name))			# Adds an optional name to the material
-name(pMaterial::materialT) = @cxx pMaterial->name()												# Returns the optional material name if one was specifed
+name(pMaterial::materialT) = unsafe_string(@cxx pMaterial->name())								# Returns the optional material name if one was specifed
 
 
-setModel(pMaterial::materialT, dataPointCount::Int,												
-	pStrainValues::Vector{Real}, pStressValues::Vector{Real}) =
-	@cxx pMaterial->setModel(dataPointCount, pointer(pStrainValues), pointer(pStressValues))	# Defines the physical material behavior with a series of true stress/strain data points
+function setModel(pMaterial::materialT, dataPointCount::Int,
+	pStrainValues::Vector{Float64}, pStressValues::Vector{Float64})
+	strain = pointer(Float32.(pStrainValues))
+	stress = pointer(Float32.(pStressValues))
+	@cxx pMaterial->setModel(dataPointCount, strain, stress)									# Defines the physical material behavior with a series of true stress/strain data points
+end
 setModelLinear(pMaterial::materialT, youngsModulus::Real, failureStress::Real) = 
 	@cxx pMaterial->setModelLinear(youngsModulus, failureStress)								# Convenience function to quickly define a linear material
 setModelBilinear(pMaterial::materialT, youngsModulus::Real, plasticModulus::Real,
@@ -180,7 +181,7 @@ isModelLinear(pMaterial::materialT) = @cxx pMaterial->isModelLinear()							# Re
 
 
 stress(pMaterial::materialT, strain::Real, transverseStrainSum::Real, forceLinear::Bool) = 
-	@cxx pMaterial->stress(strain, transverseStrainSumm forceLinear) 							# Returns the stress of the material model accounting for volumetric strain effects
+	@cxx pMaterial->stress(strain, transverseStrainSumm, forceLinear) 							# Returns the stress of the material model accounting for volumetric strain effects
 modulus(pMaterial::materialT, strain::Real) =
 	@cxx pMaterial->modulus(strain)																# Returns the modulus (slope of the stress/strain curve) of the material model at the specified strain
 isYielded(pMaterial::materialT, strain::Real) =
@@ -245,13 +246,6 @@ function cornerOffset(pVoxel::voxelT, corner::voxelCorner)
 	vec3D = @cxx pVoxel->cornerOffset(corner)
 	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
 end
-
-
-
-
-#######################################################
-#################### LINK FUNCTIONS ###################
-#######################################################
 
 
 
