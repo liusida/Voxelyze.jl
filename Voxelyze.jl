@@ -119,6 +119,8 @@ setVoxel(pVx::vxT, pMaterial::materialT, xIndex::Int, yIndex::Int, zIndex::Int) 
 voxel(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int) = 
 	@cxx pVx->voxel(xIndex, yIndex, xIndex)												# Returns a pointer to the voxel at this location if one exists, or null otherwise
 voxel(pVx::vxT, voxelIndex::Int) = @cxx pVx->voxel(voxelIndex)							# Returns a pointer to a voxel that has been added to this voxelyze object
+breakLink(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
+	@cxx pVx->breakLink(xIndex, yIndex, zIndex, direction)								# Removes the link at this voxel location in the direction indicated if one exists
 
 
 indexMinX(pVx::vxT) = @cxx pVx->indexMinX()												# The minimum X index of any voxel in this voxelyze object
@@ -132,11 +134,9 @@ indexMaxZ(pVx::vxT) = @cxx pVx->indexMaxZ()												# The maximum Z index of 
 #linkCount(pVx::vxT) = @cxx pVx->linkCount()											# Returns the number of links currently in this voxelyze object
 #linkList(pVx::vxT) = @cxx pVx->linkList()												# Returns a pointer to the internal list of links in this voxelyze object
 #collisionList(pVx::vxT) = @cxx pVx->collisionList()									# Returns a pointer to the internal list of collisions in this voxelyze object
-link(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
-	@cxx pVx->link(xIndex, yIndex, zIndex, direction)									# Returns a pointer to the link at this voxel location in the direction indicated if one exists
-link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a pointer to a link that is a part of this voxelyze object
-breakLink(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
-	@cxx pVx->breakLink(xIndex, yIndex, zIndex, direction)								# Removes the link at this voxel location in the direction indicated if one exists
+#link(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
+#	@cxx pVx->link(xIndex, yIndex, zIndex, direction)									# Returns a pointer to the link at this voxel location in the direction indicated if one exists
+#link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a pointer to a link that is a part of this voxelyze object
 
 
 setVoxelSize(pVx::vxT, voxelSize::Real) = @cxx pVx->setVoxelSize(voxelSize)				# Sets the base voxel size for the entire voxelyze object
@@ -204,6 +204,53 @@ function modelDataStress(pMaterial::materialT)
 	data = pMaterial->modelDataStress()
 	unsafe_wrap(Array, data, modelDataPoints(pMaterial))										# Returns a pointer to the first stress value data point in a continuous array. The assumed first value of 0 is included
 end
+
+
+setPoissonsRatio(pMaterial::materialT, poissonsRatio::Real) =
+	@cxx pMaterial->setPoissonsRatio(poissonsRatio)												# Defines Poisson's ratio for the material
+poissonsRatio(pMaterial::materialT) = @cxx pMaterial->poissonsRatio()							# Returns the current Poissons ratio
+bulkModulus(pMaterial::materialT) = @cxx pMaterial->bulkModulus()								# Calculates the bulk modulus from Young's modulus and Poisson's ratio
+lamesFirstParameter(pMaterial::materialT) = @cxx pMaterial->lamesFirstParameter()				# Calculates Lame's first parameter from Young's modulus and Poisson's ratio
+shearModulus(pMaterial::materialT) = @cxx pMaterial->shearModulus()								# Calculates the shear modulus from Young's modulus and Poisson's ratio
+isXyzIndependent(pMaterial::materialT) = @cxx pMaterial->isXyzIndependent()						# Returns true if poisson's ratio is zero - i.e. deformations in each dimension are independent of those in other dimensions
+
+
+setDensity(pMaterial::materialT, density::Real) = 
+	@cxx pMaterial->setDensity(density)															# Defines the density for the material in Kg/m^3. @param [in] density Desired density (0, INF)
+setStaticFriction(pMaterial::materialT, staticFrictionCoefficient::Real) =
+	@cxx pMaterial->setStaticFriction(staticFrictionCoefficient)								# Defines the coefficient of static friction
+setKineticFriction(pMaterial::materialT, kineticFrictionCoefficient::Real) =
+	@cxx pMaterial->setKineticFriction(kineticFrictionCoefficient)								# Defines the coefficient of kinetic friction
+density(pMaterial::materialT) = @cxx pMaterial->density()										# Returns the current density
+staticFriction(pMaterial::materialT) = @cxx pMaterial->staticFriction()							# Returns the current coefficient of static friction
+kineticFriction(pMaterial::materialT) = @cxx pMaterial->kineticFriction()						# Returns the current coefficient of kinetic friction
+
+
+setInternalDamping(pMaterial::materialT, zeta::Real) = 
+	@cxx pMaterial->setInternalDamping(zeta)													# Defines the internal material damping ratio. The effect is to damp out vibrations within a structure. zeta = mu/2 (mu = loss factor) = 1/(2Q) (Q = amplification factor). High values of zeta may lead to simulation instability. Recommended value: 1.0
+setGlobalDamping(pMaterial::materialT, zeta::Real) = 
+	@cxx pMaterial->setGlobalDamping(zeta)														# Defines the viscous damping of any voxels using this material relative to ground (no motion). Translation C (damping coefficient) is calculated according to zeta*2*sqrt(m*k) where k=E*nomSize. Rotational damping coefficient is similarly calculated High values relative to 1.0 may cause simulation instability
+setCollisionDamping(pMaterial::materialT, zeta::Real) = 
+	@cxx pMaterial->setCollisionDamping(zeta)													# Defines the material damping ratio for when this material collides with something. This gives some control over the elasticity of a collision. A value of zero results in a completely elastic collision
+internalDamping(pMaterial::materialT) = @cxx pMaterial->internalDamping()						# Returns the internal material damping ratio
+globalDamping(pMaterial::materialT) = @cxx pMaterial->globalDamping()							# Returns the global material damping ratio
+collisionDamping(pMaterial::materialT) = @cxx pMaterial->collisionDamping()						# Returns the collision material damping ratio
+
+
+function setExternalScaleFactor(pMaterial::materialT, dx::Real, dy::Real, dz::Real)
+	factor = @cxx Vec3D(dx, dy, dz)
+	@cxx pMaterial->setExternalScaleFactor(factor)												# Scales all voxels of this material by a specified factor in each dimension (1.0 is no scaling). This allows enables volumetric displacement-based actuation within a structure. As such, mass is unchanged when the external scale factor changes. Actual size is obtained by multiplying nominal size by the provided factor
+end
+setExternalScaleFactor(pMaterial::materialT, factor::Real) = 
+	@cxx pMaterial->setExternalScaleFactor(factor)												# Convenience function to specify isotropic external scaling factor
+function externalScaleFactor(pMaterial::materialT)
+	vec3D = @cxx pMaterial->externalScaleFactor()
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]											# Returns the current external scaling factor (unitless)
+end
+
+
+setCte(pMaterial::materialT, cte::Real) = @cxx pMaterial->setCte(cte)							# Defines the coefficient of thermal expansion
+cte(pMaterial::materialT) = @cxx pMaterial->cte()												# Returns the current coefficient of thermal expansion per degree C
 
 
 setColor(pMaterial::materialT, red::Int, green::Int, blue::Int, alpha::Int) = 
