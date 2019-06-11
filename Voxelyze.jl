@@ -15,6 +15,7 @@ const path_to_lib = path * "/lib"
 addHeaderDir(path_to_header, kind=C_User)
 Libdl.dlopen(path_to_lib * "/libvoxelyze.so", Libdl.RTLD_GLOBAL)
 cxxinclude("Voxelyze.h")
+cxxinclude("VX_MeshRender.h")
 
 
 
@@ -24,7 +25,8 @@ cxxinclude("Voxelyze.h")
 #######################################################
 
 # CVoxelyze type, CVoxelyze Enum types, and Enums
-vxT = Cxx.CxxCore.CppValue{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVoxelyze},(false, false, false)},480}
+#vxT = Cxx.CxxCore.CppValue{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVoxelyze},(false, false, false)},480}
+vxT = Cxx.CxxCore.CppPtr{Cxx.CxxCore.CppValue{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVoxelyze},(false, false, false)},N} where N,(false, false, false)}
 stateInfoType = Cxx.CxxCore.CppEnum{Symbol("CVoxelyze::stateInfoType"),UInt32}
 valueType = Cxx.CxxCore.CppEnum{Symbol("CVoxelyze::valueType"),UInt32}
 
@@ -73,12 +75,12 @@ PPN = @cxx CVX_Voxel::PPN 									# 0b110
 PPP = @cxx CVX_Voxel::PPP 									# 0b111
 
 # linkT = golbidy goop
-
-# Defines an axis (X, Y, or Z)
+#= Defines an axis (X, Y, or Z)
 linkAxis = Cxx.CxxCore.CppEnum{Symbol("CVX_Link::linkAxis"),UInt32}
 X_AXIS = @cxx CVX_Link::X_AXIS								# X Axis
 Y_AXIS = @cxx CVX_Link::Y_AXIS								# Y Axis
 Z_AXIS = @cxx CVX_Link::Z_AXIS 								# Z Axis
+=#
 
 
 
@@ -87,8 +89,8 @@ Z_AXIS = @cxx CVX_Link::Z_AXIS 								# Z Axis
 ################# VOXELYZE FUNCTIONS ##################
 #######################################################
 
-Voxelyze(voxelSize::Real) = @cxx CVoxelyze(voxelSize)									# Constructs an empty voxelyze object
-Voxelyze(jsonFilePath::String) = @cxx CVoxelyze(pointer(jsonFilePath))					# Constructs a voxelyze object from a *.vxl.json file
+Voxelyze(voxelSize::Real) = @cxxnew CVoxelyze(voxelSize)									# Constructs an empty voxelyze object
+Voxelyze(jsonFilePath::String) = @cxxnew CVoxelyze(pointer(jsonFilePath))					# Constructs a voxelyze object from a *.vxl.json file
 loadJSON(pVx::vxT, jsonFilePath::String) = @cxx pVx->loadJSON(pointer(jsonFilePath))	# Clears this voxelyze instance and loads fresh from a *.vxl.json file
 saveJSON(pVx::vxT, jsonFilePath::String) = @cxx pVx->saveJSON(pointer(jsonFilePath))	# Saves this voxelyze instance to a json file. All voxels are saved at their default locations - the state is not captured. It is recommended to specify the standard *.vxl.json file suffix
 clear(pVx::vxT) = @cxx pVx->clear()														# Erases all voxels and materials and restores the voxelyze object to its default (empty) state
@@ -169,7 +171,7 @@ name(pMaterial::materialT) = unsafe_string(@cxx pMaterial->name())								# Retu
 
 
 function setModel(pMaterial::materialT, dataPointCount::Int,
-	pStrainValues::Vector{Float64}, pStressValues::Vector{Float64})
+	pStrainValues::AbstractVector{<:Real}, pStressValues::AbstractVector{<:Real})
 	strain = pointer(Float32.(pStrainValues))
 	stress = pointer(Float32.(pStressValues))
 	@cxx pMaterial->setModel(dataPointCount, strain, stress)									# Defines the physical material behavior with a series of true stress/strain data points
@@ -238,8 +240,7 @@ collisionDamping(pMaterial::materialT) = @cxx pMaterial->collisionDamping()					
 
 
 function setExternalScaleFactor(pMaterial::materialT, dx::Real, dy::Real, dz::Real)
-	factor = @cxx Vec3D(dx, dy, dz)
-	@cxx pMaterial->setExternalScaleFactor(factor)												# Scales all voxels of this material by a specified factor in each dimension (1.0 is no scaling). This allows enables volumetric displacement-based actuation within a structure. As such, mass is unchanged when the external scale factor changes. Actual size is obtained by multiplying nominal size by the provided factor
+	@cxx pMaterial->setExternalScaleFactor(dx, dy, dz)											# Scales all voxels of this material by a specified factor in each dimension (1.0 is no scaling). This allows enables volumetric displacement-based actuation within a structure. As such, mass is unchanged when the external scale factor changes. Actual size is obtained by multiplying nominal size by the provided factor
 end
 setExternalScaleFactor(pMaterial::materialT, factor::Real) = 
 	@cxx pMaterial->setExternalScaleFactor(factor)												# Convenience function to specify isotropic external scaling factor
@@ -254,17 +255,17 @@ cte(pMaterial::materialT) = @cxx pMaterial->cte()												# Returns the curre
 
 
 setColor(pMaterial::materialT, red::Int, green::Int, blue::Int, alpha::Int) = 
-	@cxx pMaterial->setColor(red, green, blue, alpha)									# Sets the material color. Values from [0,255]
+	@cxx pMaterial->setColor(red, green, blue, alpha)											# Sets the material color. Values from [0,255]
 setColor(pMaterial::materialT, red::Int, green::Int, blue::Int) = 
-	@cxx pMaterial->setColor(red, green, blue, 255)										# Sets the material color. Values from [0,255]
-setRed(pMaterial::materialT, red::Int) = @cxx pMaterial->setRed(red)					# Sets the red channel of the material color
-setGreen(pMaterial::materialT, green::Int) = @cxx pMaterial->setGreen(green)			# Sets the green channel of the material color
-setBlue(pMaterial::materialT, blue::Int) = @cxx pMaterial->setBlue(blue)				# Sets the blue channel of the material color
-setAlpha(pMaterial::materialT, alpha::Int) = @cxx pMaterial->setAlpha(alpha)			# Sets the alpha channel of the material color
-red(pMaterial::materialT) = @cxx pMaterial->red()										# Returns the red channel of the material color
-green(pMaterial::materialT) = @cxx pMaterial->green()									# Returns the green channel of the material color
-blue(pMaterial::materialT) = @cxx pMaterial->blue()										# Returns the blue channel of the material color
-alpha(pMaterial::materialT) = @cxx pMaterial->alpha()									# Returns the alpha channel of the material color
+	@cxx pMaterial->setColor(red, green, blue, 255)												# Sets the material color. Values from [0,255]
+setRed(pMaterial::materialT, red::Int) = @cxx pMaterial->setRed(red)							# Sets the red channel of the material color
+setGreen(pMaterial::materialT, green::Int) = @cxx pMaterial->setGreen(green)					# Sets the green channel of the material color
+setBlue(pMaterial::materialT, blue::Int) = @cxx pMaterial->setBlue(blue)						# Sets the blue channel of the material color
+setAlpha(pMaterial::materialT, alpha::Int) = @cxx pMaterial->setAlpha(alpha)					# Sets the alpha channel of the material color
+red(pMaterial::materialT) = @cxx pMaterial->red()												# Returns the red channel of the material color
+green(pMaterial::materialT) = @cxx pMaterial->green()											# Returns the green channel of the material color
+blue(pMaterial::materialT) = @cxx pMaterial->blue()												# Returns the blue channel of the material color
+alpha(pMaterial::materialT) = @cxx pMaterial->alpha()											# Returns the alpha channel of the material color
 
 
 
@@ -313,8 +314,47 @@ end
 
 
 
+#######################################################
+################# RENDERING FUNCTIONS #################
+#######################################################
+
+MeshRender(pVx::vxT) = @cxx CVX_MeshRender(Vx)
+generateMesh(pMesh) = @cxx pMesh->generateMesh()
 
 
+vCount(pMesh) = @cxx pMesh->vCount()
+qCount(pMesh) = @cxx pMesh->qCount()
+cCount(pMesh) = @cxx pMesh->cCount()
 
 
+getVertices(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vCount(pMesh))
+getQuads(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getQuads()), qCount(pMesh))
+getQuadColors(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getQuadColors()), qcCount(pMesh))
+
+
+function getMesh(pMesh)
+	vcount = vCount(pMesh)
+	qcount = qCount(pMesh)
+	ccount = cCount(pMesh)
+
+	verts = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vcount)
+	quads = unsafe_wrap(Array, (@cxx pMesh->getQuads()), qcount)
+
+	coordinates = Matrix{Float32}(undef, div(vcount, 3), 3)
+	for (i, j) in zip(1:div(vcount, 3), 1:3:vcount)
+		coordinates[i, :] = verts[j:j+2]
+	end
+
+	connectivity = Matrix{Int32}(undef, div(qcount, 4), 4)
+	for (i, j) in zip(1:div(qcount, 4), 1:4:qcount)
+		connectivity[i, :] = quads[j:j+3]
+	end
+
+	facecolors = Matrix{Float32}(undef, div(ccount, 3), 3)
+	for (i, j) in zip(1:div(ccount, 3), 1:3:ccount)
+		coordinates[i, :] = verts[j:j+2]
+	end
+
+	return coordinates, connectivity, facecolors
+end
 

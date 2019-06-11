@@ -12,3 +12,4 @@ setForce(Voxel3, 0, 0, -1)                  # Pulls Voxel 3 downward with 1 Newt
 for i=1:100                                 # Simulate 100 timesteps
     doTimeStep(Vx)
 end
+

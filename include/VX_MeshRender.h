@@ -38,6 +38,13 @@ public:
 	void saveObj(const char* filePath); //!< Save the current deformed mesh as an obj file to the path specified. Coloring is not supported yet. @param[in] filePath File path to save the obj file as. Creates or overwrites.
 	void glDraw(); //!< Executes openGL drawing commands to draw this mesh in an Open GL window if USE_OPEN_GL is defined.
 
+	int vCount() {return vertices.size();};
+	int qCount() {return quads.size();};
+	int cCount() {return quadColors.size();};
+	const float* getVertices() {return vertices.data();};
+	const int* getQuads() {return quads.data();};
+	const float* getQuadColors() {return quadColors.data();};
+
 private:
 	CVoxelyze* vx;
 
