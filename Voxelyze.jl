@@ -317,6 +317,7 @@ end
 #######################################################
 ################# RENDERING FUNCTIONS #################
 #######################################################
+using AbstractPlotting
 
 MeshRender(pVx::vxT) = @cxx CVX_MeshRender(Vx)
 generateMesh(pMesh) = @cxx pMesh->generateMesh()
@@ -329,7 +330,7 @@ cCount(pMesh) = @cxx pMesh->cCount()
 
 getVertices(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vCount(pMesh))
 getQuads(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getQuads()), qCount(pMesh))
-getQuadColors(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getQuadColors()), qcCount(pMesh))
+getQuadColors(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getQuadColors()), cCount(pMesh))
 
 
 function getMesh(pMesh)
@@ -338,23 +339,24 @@ function getMesh(pMesh)
 	ccount = cCount(pMesh)
 
 	verts = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vcount)
-	quads = unsafe_wrap(Array, (@cxx pMesh->getQuads()), qcount)
+	quads = unsafe_wrap(Array, (@cxx pMesh->getQuads()), qcount) .+ 1
+	qcolors = unsafe_wrap(Array, (@cxx pMesh->getQuadColors()), ccount)
 
 	coordinates = Matrix{Float32}(undef, div(vcount, 3), 3)
 	for (i, j) in zip(1:div(vcount, 3), 1:3:vcount)
 		coordinates[i, :] = verts[j:j+2]
 	end
 
-	connectivity = Matrix{Int32}(undef, div(qcount, 4), 4)
-	for (i, j) in zip(1:div(qcount, 4), 1:4:qcount)
-		connectivity[i, :] = quads[j:j+3]
+	connectivity = Matrix{Int32}(undef, div(qcount, 2), 3)
+	vcolors = Vector{Any}(undef, div(vcount, 3))
+	for (i, j, k) in zip(1:2:div(qcount, 2), 1:4:qcount, 1:div(ccount, 3))
+		connectivity[i, :] = quads[j:j+2]
+		connectivity[i+1, :] = [quads[j+2:j+3]..., quads[j]]
+		for idx in Set([connectivity[i, :]..., connectivity[i+1, :]...])
+			vcolors[idx] = RGBf0(qcolors[k:k+2]...)
+		end
 	end
 
-	facecolors = Matrix{Float32}(undef, div(ccount, 3), 3)
-	for (i, j) in zip(1:div(ccount, 3), 1:3:ccount)
-		coordinates[i, :] = verts[j:j+2]
-	end
-
-	return coordinates, connectivity, facecolors
+	return coordinates, connectivity, [vcolors...]
 end
 
