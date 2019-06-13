@@ -15,7 +15,7 @@ const path_to_lib = path * "/lib"
 addHeaderDir(path_to_header, kind=C_User)
 Libdl.dlopen(path_to_lib * "/libvoxelyze.so", Libdl.RTLD_GLOBAL)
 cxxinclude("Voxelyze.h")
-cxxinclude("VX_MeshRender.h")
+cxxinclude("My_MeshRender.h")
 
 
 
@@ -65,22 +65,14 @@ Z_POS = @cxx CVX_Voxel::Z_POS 								# Positive Z direction
 Z_NEG = @cxx CVX_Voxel::Z_NEG 								# Negative Z direction
 
 # Defines each of 8 corners of a voxel
-NNN = @cxx CVX_Voxel::NNN 									# 0b000
-NNP = @cxx CVX_Voxel::NNP 									# 0b001
-NPN = @cxx CVX_Voxel::NPN 									# 0b010
-NPP = @cxx CVX_Voxel::NPP 									# 0b011
-PNN = @cxx CVX_Voxel::PNN 									# 0b100
-PNP = @cxx CVX_Voxel::PNP 									# 0b101
-PPN = @cxx CVX_Voxel::PPN 									# 0b110
-PPP = @cxx CVX_Voxel::PPP 									# 0b111
-
-# linkT = golbidy goop
-#= Defines an axis (X, Y, or Z)
-linkAxis = Cxx.CxxCore.CppEnum{Symbol("CVX_Link::linkAxis"),UInt32}
-X_AXIS = @cxx CVX_Link::X_AXIS								# X Axis
-Y_AXIS = @cxx CVX_Link::Y_AXIS								# Y Axis
-Z_AXIS = @cxx CVX_Link::Z_AXIS 								# Z Axis
-=#
+NNN = @cxx CVX_Voxel::NNN 									# Negative X direction, Negative Y direction, Negative Z direction
+NNP = @cxx CVX_Voxel::NNP 									# Negative X direction, Negative Y direction, Positive Z direction
+NPN = @cxx CVX_Voxel::NPN 									# Negative X direction, Positive Y direction, Negative Z direction
+NPP = @cxx CVX_Voxel::NPP 									# Negative X direction, Positive Y direction, Positive Z direction
+PNN = @cxx CVX_Voxel::PNN 									# Positive X direction, Negative Y direction, Negative Z direction
+PNP = @cxx CVX_Voxel::PNP 									# Positive X direction, Negative Y direction, Positive Z direction
+PPN = @cxx CVX_Voxel::PPN 									# Positive X direction, Positive Y direction, Negative Z direction
+PPP = @cxx CVX_Voxel::PPP 									# Positive X direction, Positive Y direction, Positive Z direction
 
 
 
@@ -116,7 +108,7 @@ material(pVx::vxT, materialIndex::Int) = @cxx pVx->material(materialIndex)				# 
 
 setVoxel(pVx::vxT, pMaterial::materialT, xIndex::Int, yIndex::Int, zIndex::Int) = 
 	@cxx pVx->setVoxel(pMaterial, xIndex, yIndex, zIndex)								# Adds a voxel made of material at the specified index. If a voxel already exists here it is replaced
-#voxelCount(pVx::vxT) = @cxx pVx->voxelCount()											# Returns the number of voxels currently in this voxelyze object
+voxelCount(pVx::vxT) = @cxx pVx->voxelCount()											# Returns the number of voxels currently in this voxelyze object
 #voxelList(pVx::vxT) = @cxx pVx->voxelList()											# Returns a pointer to the internal list of voxels in this voxelyze object
 voxel(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int) = 
 	@cxx pVx->voxel(xIndex, yIndex, xIndex)												# Returns a pointer to the voxel at this location if one exists, or null otherwise
@@ -133,12 +125,12 @@ indexMaxY(pVx::vxT) = @cxx pVx->indexMaxY()												# The maximum Y index of 
 indexMaxZ(pVx::vxT) = @cxx pVx->indexMaxZ()												# The maximum Z index of any voxel in this voxelyze object
 
 
-#linkCount(pVx::vxT) = @cxx pVx->linkCount()											# Returns the number of links currently in this voxelyze object
+linkCount(pVx::vxT) = @cxx pVx->linkCount()												# Returns the number of links currently in this voxelyze object
 #linkList(pVx::vxT) = @cxx pVx->linkList()												# Returns a pointer to the internal list of links in this voxelyze object
 #collisionList(pVx::vxT) = @cxx pVx->collisionList()									# Returns a pointer to the internal list of collisions in this voxelyze object
-#link(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
-#	@cxx pVx->link(xIndex, yIndex, zIndex, direction)									# Returns a pointer to the link at this voxel location in the direction indicated if one exists
-#link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a pointer to a link that is a part of this voxelyze object
+link(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
+	@cxx pVx->link(xIndex, yIndex, zIndex, direction)									# Returns a pointer to the link at this voxel location in the direction indicated if one exists
+link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a pointer to a link that is a part of this voxelyze object
 
 
 setVoxelSize(pVx::vxT, voxelSize::Real) = @cxx pVx->setVoxelSize(voxelSize)				# Sets the base voxel size for the entire voxelyze object
@@ -317,46 +309,84 @@ end
 #######################################################
 ################# RENDERING FUNCTIONS #################
 #######################################################
-using AbstractPlotting
+using Makie
+using Makie: AbstractPlotting
 
-MeshRender(pVx::vxT) = @cxx CVX_MeshRender(Vx)
+function MeshRender(pVx::vxT)
+	pMesh = @cxx CVX_MeshRender(Vx)
+	@cxx pMesh->generateMesh()
+	return pMesh
+end
 generateMesh(pMesh) = @cxx pMesh->generateMesh()
 
 
 vCount(pMesh) = @cxx pMesh->vCount()
-qCount(pMesh) = @cxx pMesh->qCount()
+tCount(pMesh) = @cxx pMesh->tCount()
 cCount(pMesh) = @cxx pMesh->cCount()
 
 
 getVertices(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vCount(pMesh))
-getQuads(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getQuads()), qCount(pMesh))
-getQuadColors(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getQuadColors()), cCount(pMesh))
+getTriangles(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getTriangles()), tCount(pMesh))
+getColors(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getColors()), cCount(pMesh))
 
 
 function getMesh(pMesh)
 	vcount = vCount(pMesh)
-	qcount = qCount(pMesh)
+	tcount = tCount(pMesh)
 	ccount = cCount(pMesh)
 
-	verts = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vcount)
-	quads = unsafe_wrap(Array, (@cxx pMesh->getQuads()), qcount) .+ 1
-	qcolors = unsafe_wrap(Array, (@cxx pMesh->getQuadColors()), ccount)
+	vertices = getVertices(pMesh)
+	traingles = getTriangles(pMesh)
+	colors = getColors(pMesh)
 
 	coordinates = Matrix{Float32}(undef, div(vcount, 3), 3)
 	for (i, j) in zip(1:div(vcount, 3), 1:3:vcount)
-		coordinates[i, :] = verts[j:j+2]
+		coordinates[i, :] = vertices[j:j+2]
 	end
 
-	connectivity = Matrix{Int32}(undef, div(qcount, 2), 3)
-	vcolors = Vector{Any}(undef, div(vcount, 3))
-	for (i, j, k) in zip(1:2:div(qcount, 2), 1:4:qcount, 1:div(ccount, 3))
-		connectivity[i, :] = quads[j:j+2]
-		connectivity[i+1, :] = [quads[j+2:j+3]..., quads[j]]
-		for idx in Set([connectivity[i, :]..., connectivity[i+1, :]...])
-			vcolors[idx] = RGBf0(qcolors[k:k+2]...)
-		end
+	connectivity = Matrix{Int32}(undef, div(tcount, 3), 3)
+	for (i, j) in zip(1:div(tcount, 3), 1:3:tcount)
+		connectivity[i, :] = traingles[j:j+2]
 	end
 
-	return coordinates, connectivity, [vcolors...]
+	colormap = []
+	for (i, j) in zip(1:div(ccount, 4), 1:4:ccount)
+		push!(colormap, RGBAf0(colors[j:j+3]...))
+	end
+
+	return coordinates, connectivity, [colormap...]
 end
+
+function eyepos(points)
+	xpos =  minimum(points[:, 1]) + maximum(points[:, 1]) / 2
+	ypos =  minimum(points[:, 2]) - maximum(points[:, 2])
+	zpos =  minimum(points[:, 3]) + maximum(points[:, 3]) / 2
+	return Vec3f0(xpos, ypos, zpos)
+end
+
+function lookat(points)
+	xpos =  minimum(points[:, 1]) + maximum(points[:, 1]) / 2
+	ypos =  minimum(points[:, 2]) + maximum(points[:, 2]) / 2
+	zpos =  minimum(points[:, 3]) + maximum(points[:, 3]) / 2
+	return Vec3f0(xpos, ypos, zpos)
+end
+
+function setScene(pMesh)
+	scene = Scene()
+	res = getMesh(pMesh)
+	node = Node(res)
+	scene = mesh!(scene, lift(x -> x[1], node), lift(x -> x[2], node), color=lift(x -> x[3], node))
+	update_cam!(scene, lift(x -> eyepos(x[1]), node).val, lift(x -> lookat(x[1]), node).val)
+	#scene.center = false
+	return scene, node
+end
+
+function render(pMesh, node)
+	generateMesh(pMesh)
+	push!(node, getMesh(pMesh))
+end
+
+
+
+
 

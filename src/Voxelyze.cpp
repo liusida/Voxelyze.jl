@@ -31,8 +31,6 @@ CVoxelyze::CVoxelyze(double voxelSize)
 {
 	clear();
 	voxSize = voxelSize <= 0 ? DEFAULT_VOXEL_SIZE : voxelSize;
-
-	std::cout << "Creating Voxel Engine with Voxel size: " << voxelSize << std::endl;
 }
 
 CVoxelyze::~CVoxelyze(void)
@@ -64,7 +62,6 @@ CVoxelyze& CVoxelyze::operator=(CVoxelyze& VIn)
 
 bool CVoxelyze::loadJSON(const char* jsonFilePath)
 {
-	std::cout << "Loading JSON..." << std::endl;
 	std::ifstream t(jsonFilePath);
 	if (t){
 		std::stringstream buffer;
@@ -83,7 +80,6 @@ bool CVoxelyze::loadJSON(const char* jsonFilePath)
 
 bool CVoxelyze::saveJSON(const char* jsonFilePath)
 {
-	std::cout << "Saving JSON..." << std::endl;
 	std::ofstream t(jsonFilePath);
 	if (t){
 		rapidjson::StringBuffer s;
@@ -102,7 +98,6 @@ bool CVoxelyze::readJSON(rapidjson::Value& vxl)
 {
 	clear();
 
-	std::cout << "Reading JSON..." << std::endl;
 	if (!vxl.IsObject()) {return false;}
 	
 	if (!vxl.HasMember("voxelSize") || !vxl["voxelSize"].IsDouble()) {return false;}
@@ -169,7 +164,6 @@ bool CVoxelyze::readJSON(rapidjson::Value& vxl)
 
 bool CVoxelyze::writeJSON(rapidjson::PrettyWriter<rapidjson::StringBuffer>& w)
 {
-	std::cout << "Writing JSON..." << std::endl;
 	w.StartObject();
 	w.Key("voxelSize");		w.Double(voxSize);
 	if (ambientTemp != 0){		w.Key("relativeAmbientTemperature");	w.Double((double)ambientTemp);}
@@ -249,7 +243,6 @@ bool CVoxelyze::writeJSON(rapidjson::PrettyWriter<rapidjson::StringBuffer>& w)
 
 bool CVoxelyze::doLinearSolve() //linearizes at current point and solves
 {
-	std::cout << "Doing Linear Solve Step" << std::endl;
 	CVX_LinearSolver solver(this);
 	solver.solve();
 
@@ -258,7 +251,6 @@ bool CVoxelyze::doLinearSolve() //linearizes at current point and solves
 
 bool CVoxelyze::doTimeStep(float dt)
 {
-	std::cout << "Doing Time Step with dt: " << dt << std::endl;
 	if (dt==0) return true;
 	else if (dt<0) dt = recommendedTimeStep();
 
@@ -294,7 +286,6 @@ bool CVoxelyze::doTimeStep(float dt)
 
 float CVoxelyze::recommendedTimeStep() const
 {
-	std::cout << "Calculating an Optimal Time Step" << std::endl;
 	//find the largest natural frequency (sqrt(k/m)) that anything in the simulation will experience, then multiply by 2*pi and invert to get the optimally largest timestep that should retain stability
 	float MaxFreq2 = 0.0f; //maximum frequency in the simulation in rad/sec
 
@@ -322,7 +313,6 @@ float CVoxelyze::recommendedTimeStep() const
 
 void CVoxelyze::resetTime()
 {
-	std::cout << "Reseting Time" << std::endl;
 	currentTime=0.0f;
 	collisionsStale = true;
 	nearbyStale = true;
@@ -333,7 +323,6 @@ void CVoxelyze::resetTime()
 
 void CVoxelyze::clear() //deallocates and returns everything to defaults (except voxel size)
 {
-	std::cout << "Clearing Voxel Engine Instance" << std::endl;
 	//delete and remove links
 	for (std::vector<CVX_Link*>::iterator it = linksList.begin(); it!=linksList.end(); it++) delete *it;
 	for (int i=0; i<3; i++)	links[i].clear();
@@ -368,9 +357,7 @@ void CVoxelyze::clear() //deallocates and returns everything to defaults (except
 
 CVX_Material* CVoxelyze::addMaterial(float youngsModulus, float density)
 {
-	std::cout << "Add Material... " << std::endl;
 	try {
-		std::cout << "Trying to add material" << std::endl;
 		CVX_MaterialVoxel* pMat = new CVX_MaterialVoxel(youngsModulus, density, voxSize);
 		pMat->setGravityMultiplier(grav);
 		voxelMats.push_back(pMat);
@@ -381,7 +368,6 @@ CVX_Material* CVoxelyze::addMaterial(float youngsModulus, float density)
 
 CVX_Material* CVoxelyze::addMaterial(rapidjson::Value& mat)
 {
-	std::cout << "Add Material... " << std::endl;
 	CVX_MaterialVoxel* pMat = new CVX_MaterialVoxel(mat, voxSize);
 	pMat->setGravityMultiplier(grav);
 	voxelMats.push_back(pMat);
@@ -390,7 +376,6 @@ CVX_Material* CVoxelyze::addMaterial(rapidjson::Value& mat)
 
 CVX_Material* CVoxelyze::addMaterial(const CVX_Material& mat)
 {
-	std::cout << "Add Material... " << std::endl;
 	CVX_MaterialVoxel* pMat = new CVX_MaterialVoxel(mat, voxSize);
 	pMat->setGravityMultiplier(grav);
 	voxelMats.push_back(pMat);
@@ -399,7 +384,6 @@ CVX_Material* CVoxelyze::addMaterial(const CVX_Material& mat)
 
 bool CVoxelyze::removeMaterial(CVX_Material* toRemove)
 {
-	std::cout << "Removing Material if it Exists " << std::endl;
 	CVX_MaterialVoxel* pMat = (CVX_MaterialVoxel*)toRemove;
 	if (!exists(pMat)) return false;
 
@@ -422,7 +406,6 @@ bool CVoxelyze::removeMaterial(CVX_Material* toRemove)
 
 bool CVoxelyze::replaceMaterial(CVX_Material* replaceMe, CVX_Material* replaceWith)
 {
-	std::cout << "Replacing Material if it Exists" << std::endl;
 	if (!exists((CVX_MaterialVoxel*)replaceMe) || !exists((CVX_MaterialVoxel*)replaceWith)) return false;
 	
 	//switch all voxel references
@@ -439,7 +422,6 @@ bool CVoxelyze::replaceMaterial(CVX_Material* replaceMe, CVX_Material* replaceWi
 
 CVX_Voxel* CVoxelyze::setVoxel(CVX_Material* material, int xIndex, int yIndex, int zIndex)
 {
-	std::cout << "Setting Voxel Material and Index (Creating a new one if it doesn't exist)" << std::endl;
 	if (material == NULL){
 		removeVoxel(xIndex, yIndex, zIndex);
 		return NULL;
@@ -457,7 +439,6 @@ CVX_Voxel* CVoxelyze::setVoxel(CVX_Material* material, int xIndex, int yIndex, i
 
 CVX_Voxel* CVoxelyze::addVoxel(CVX_MaterialVoxel* newVoxelMaterial, int xIndex, int yIndex, int zIndex) //creates a new voxel if there isn't one here. Otherwise
 {
-	std::cout << "Adding a new Voxel" << std::endl;
 	try {
 		nearbyStale = collisionsStale = true;
 
@@ -483,7 +464,6 @@ CVX_Voxel* CVoxelyze::addVoxel(CVX_MaterialVoxel* newVoxelMaterial, int xIndex, 
 
 void CVoxelyze::removeVoxel(int xIndex, int yIndex, int zIndex)
 {
-	std::cout << "Removing a Voxel if it Exists" << std::endl;
 	nearbyStale = collisionsStale = true;
 
 	const CVX_Voxel* pV = voxel(xIndex, yIndex, zIndex);
@@ -505,7 +485,6 @@ void CVoxelyze::removeVoxel(int xIndex, int yIndex, int zIndex)
 
 void CVoxelyze::replaceVoxel(CVX_MaterialVoxel* newVoxelMaterial, int xIndex, int yIndex, int zIndex)
 {
-	std::cout << "Replacing a Voxel if it Exists " << std::endl;
 	collisionsStale = true; //new material requires new stiffnesses of contact bonds
 
 	//replace the voxel materrial
@@ -606,7 +585,6 @@ bool CVoxelyze::exists(const CVX_MaterialVoxel* toCheck)
 
 void CVoxelyze::setAmbientTemperature(float temperature, bool allVoxels)
 {
-	std::cout << "Setting the Ambient Temperature" << std::endl;
 	ambientTemp = temperature;
 	//for now just set the temperature of each voxel (independent of future
 	if (allVoxels){
@@ -618,7 +596,6 @@ void CVoxelyze::setAmbientTemperature(float temperature, bool allVoxels)
 
 void CVoxelyze::setGravity(float g)
 {
-	std::cout << "Setting Gravity Constant" << std::endl;
 	grav = g;
 	for (std::vector<CVX_MaterialVoxel*>::iterator it=voxelMats.begin(); it != voxelMats.end(); it++){
 		(*it)->setGravityMultiplier(grav);
@@ -627,7 +604,6 @@ void CVoxelyze::setGravity(float g)
 
 void CVoxelyze::enableFloor(bool enabled)
 {
-	std::cout << "Enabling Floor" << std::endl;
 	floor = enabled;
 	for (std::vector<CVX_Voxel*>::iterator it = voxelsList.begin(); it != voxelsList.end(); it++){
 		(*it)->enableFloor(enabled);
@@ -636,7 +612,6 @@ void CVoxelyze::enableFloor(bool enabled)
 
 void CVoxelyze::enableCollisions(bool enabled)
 {
-	std::cout << "Enabling Collisions" << std::endl;
 	if (collisions == enabled) return; //if not changing state
 
 	collisions = enabled;
@@ -668,7 +643,6 @@ CVX_MaterialLink* CVoxelyze::combinedMaterial(CVX_MaterialVoxel* mat1, CVX_Mater
 
 void CVoxelyze::setVoxelSize(double voxelSize) //sets the voxel size.
 {
-	std::cout << "Setting Voxel Size" << std::endl;
 	double scaleFactor = voxelSize/voxSize; //scaling factor
 	voxSize = voxelSize;
 	
