@@ -74,6 +74,9 @@ PNP = @cxx CVX_Voxel::PNP 									# Positive X direction, Negative Y direction,
 PPN = @cxx CVX_Voxel::PPN 									# Positive X direction, Positive Y direction, Negative Z direction
 PPP = @cxx CVX_Voxel::PPP 									# Positive X direction, Positive Y direction, Positive Z direction
 
+# CVX_MeshRender type
+meshT = Cxx.CxxCore.CppValue{Cxx.CxxCore.CxxQualType{Cxx.CxxCore.CppBaseType{:CVX_MeshRender},(false, false, false)},80}
+
 
 
 
@@ -266,42 +269,128 @@ alpha(pMaterial::materialT) = @cxx pMaterial->alpha()											# Returns the al
 ################### VOXEL FUNCTIONS ###################
 #######################################################
 
-# Fixed all of the Degrees of Freedom of a voxel
+timeStep(pVoxel::voxelT, dt::Real) = @cxx pVoxel->timeStep(dt) 									# Advances this voxel's state according to all forces and moments acting on it. Large timesteps will cause instability. Use CVoxelyze::recommendedTimeStep() to get the recommended largest stable timestep. @param[in] dt Timestep (in second) to advance.
+
+
+material(pVoxel::voxelT) @cxx pVoxel->material() 												# Returns the linked material object containing the physical properties of this voxel
+linkCount(pVoxel::voxelT) = @cxx pVoxel->linkCount()											# Returns the number of links present for this voxel out of a total 6 possible
+adjacentVoxel(pVoxel::voxelT, direction::linkDirection) = @cxx pVoxel->adjacentVoxel(direction)	# Returns a pointer to the voxel in the specified direction if one exists, or NULL otherwise. Direction Positive or negative X, Y, or Z direction according to the linkDirection
+indexX(pVoxel::voxelT) = @cxx pVoxel->indexX()													# Returns the global X index of this voxel
+indexY(pVoxel::voxelT) = @cxx pVoxel->indexY()													# Returns the global Y index of this voxel
+indexZ(pVoxel::voxelT) = @cxx pVoxel->indexZ()													# Returns the global Z index of this voxel
+
+
+externalExists(pVoxel::voxelT) = @cxx pVoxel->externalExists() 									# Returns true if this voxel has had its CVX_External object created. This does not mecessarily imply that this external object actually contains any fixes or forces.
+external(pVoxel::voxelT) = @cxx pVoxel->external() 												# Returns a pointer to this voxel's unique external object that contains fixes, forces, and/or displacements. Allocates a new empty one if it doesn't already exist. Use externalExists() to determine if external() has been previously called at any time.
+haltMotion(pVoxel::voxelT) = @cxx pVoxel->haltMotion()											# Halts all momentum of this block. Unless fixed the voxel will continue to move in subsequent timesteps
 function setFixedAll(pVoxel::voxelT)
-	@cxx ( @cxx pVoxel->external() )->setFixedAll()
+	@cxx ( @cxx pVoxel->external() )->setFixedAll()												# Fixed all of the Degrees of Freedom of a voxel
 end
-
-# Creates an external 3D force F on the voxel
 function setForce(pVoxel::voxelT, Fx::Real, Fy::Real, Fz::Real)
-	@cxx ( @cxx pVoxel->external() )->setForce(Fx, Fy, Fz)
+	@cxx ( @cxx pVoxel->external() )->setForce(Fx, Fy, Fz)										# Creates an external 3D force F on the voxel
+end
+function externalForce(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->externalForce()														# Returns the current external force applied to this voxel in newtons. If the voxel is not fixed this will return any applied external forces. If fixed it will return the current reaction force necessary to enforce the zero-motion constraint
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+function force(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->force()																# Calculates and returns the sum of the current forces on this voxel. This would normally only be called internally, but can be used to query the state of a voxel for visualization or debugging
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+function setMoment(pVoxel::voxelT, Fx::Real, Fy::Real, Fz::Real)
+	@cxx ( @cxx pVoxel->external() )->setMoment(Fx, Fy, Fz)										# Creates an external 3D force F on the voxel
+end
+function externalMoment(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->externalMoment()														# Returns the current external moment applied to this voxel in N-m. If the voxel is not fixed this will return any applied external moments. If fixed it will return the current reaction moment necessary to enforce the zero-motion constraint
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+function moment(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->moment()																# Calculates and returns the sum of the current moments on this voxel. This would normally only be called internally, but can be used to query the state of a voxel for visualization or debugging
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
 end
 
-# Set the temperature of a specific voxel
-function setTemperature(pVoxel::voxelT, temperature::Real)
-	@cxx pVoxel->setTemperature(temperature)
-end
-
-# Get the adjacent voxel (if linked) in the specified direction
-function adjacentVoxel(pVoxel::voxelT, direction::linkDirection)
-	@cxx pVoxel->adjacentVoxel(direction)
-end
 
 function position(pVoxel::voxelT)
-	vec3D = @cxx pVoxel->position()
+	vec3D = @cxx pVoxel->position()																# Returns the center position of this voxel in meters (GCS). This is the origin of the local coordinate system (LCS)
 	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
 end
-
-# Get the specified corner position of the voxel
+function originalPosition(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->originalPosition()														# Returns the initial (nominal) position of this voxel
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+function displacement(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->displacement()															# Returns the 3D displacement of this voxel from its original location in meters (GCS)
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+function size(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->size()																	# Returns the current deformed size of this voxel in the local voxel coordinates system (LCS). If asymmetric forces are acting on this voxel, the voxel may not be centered on position(). Use cornerNegative() and cornerPositive() to determine this information
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
 function cornerPosition(pVoxel::voxelT, corner::voxelCorner)
-	vec3D = @cxx pVoxel->cornerPosition(corner)
+	vec3D = @cxx pVoxel->cornerPosition(corner)													# Returns the deformed location of the voxel corner in the specified corner in the global coordinate system (GCS). Essentially cornerOffset() with the voxel's current global position/rotation applied
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+function cornerOffset(pVoxel::voxelT, corner::voxelCorner)
+	vec3D = @cxx pVoxel->cornerOffset(corner)													# Returns the deformed location of the voxel corner in the specified corner in the local voxel coordinate system (LCS). Used to draw the deformed voxel in the correct position relative to the position()
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+isInterior(pVoxel::voxelT) = @cxx pVoxel->isInterior()											# Returns true if the voxel is surrounded by other voxels on its 6 coordinate faces. Returns false if 1 or more faces are exposed
+isSurface(pVoxel::voxelT) = @cxx pVoxel->isSurface()											# The inverse of isInterior(). Returns true 1 or more faces are exposed. Returns false if the voxel is surrounded by other voxels on its 6 coordinate faces
+
+
+function baseSize(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->baseSize()																# Returns the nominal size of this voxel (LCS) accounting for any specified temperature and external actuation. Specifically, returns the zero-stress size of the voxel if all forces/moments were removed
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+function baseSizeAverage(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->baseSizeAverage()														# Returns the average nominal size of the voxel in a zero-stress (no force) state. (X+Y+Z/3)
 	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
 end
 
-# Get the specified corner offset of the voxel
-function cornerOffset(pVoxel::voxelT, corner::voxelCorner)
-	vec3D = @cxx pVoxel->cornerOffset(corner)
+
+function orientation(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->orientation()															# Returns the orientation of this voxel in quaternion form (GCS). This orientation defines the relative orientation of the local coordinate system (LCS). The unit quaternion represents the original orientation of this voxel
 	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
 end
+function orientationAxis(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->orientationAxis()														# Use with orientationAngle() to get the orientation of this voxel in angle/axis form. Returns a unit vector in the global coordinate system (GCS)
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end
+orientationAngle(pVoxel::voxelT) = @cxx pVoxel->orientationAngle()								# Use with orientationAxis() to get the orientation of this voxel in angle/axis form. Returns the angle in radians
+
+
+displacementMagnitude(pVoxel::voxelT) = @cxx pVoxel->displacementMagnitude()					# Returns the distance (magnitude of displacement) this voxel has moved from its initial nominal position. (GCS)
+angularDisplacementMagnitude(pVoxel::voxelT) = @cxx pVoxel->angularDisplacementMagnitude()		# Returns the angle (magnitude of angular displacement) this voxel has rotated from its initial nominal orientation. (GCS)
+function velocity(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->velocity()																# Returns the 3D velocity of this voxel in m/s (GCS)
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end	
+velocityMagnitude(pVoxel::voxelT) = @cxx pVoxel->velocityMagnitude()							# Returns the velocity of this voxel in m/s
+function angularVelocity(pVoxel::voxelT)
+	vec3D = @cxx pVoxel->angularVelocity()														# Returns the 3D angular velocity of this voxel in rad/s (GCS)
+	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
+end	
+angularVelocityMagnitude(pVoxel::voxelT) = @cxx pVoxel->angularVelocityMagnitude()				# Returns the angular velocity of this voxel in rad/s
+kineticEnergy(pVoxel::voxelT) = @cxx pVoxel->kineticEnergy()									# Returms the kinetic energy of this voxel in Joules
+volumetricStrain(pVoxel::voxelT) = @cxx pVoxel->volumetricStrain()								# Returns the volumetric strain of the voxel according to the definition at http://www.colorado.edu/engineering/CAS/courses.d/Structures.d/IAST.Lect05.d/IAST.Lect05.pdf
+pressure(pVoxel::voxelT) = @cxx pVoxel->pressure()												# Returns the engineering internal "pressure" in Pa according to the definition at http://www.colorado.edu/engineering/CAS/courses.d/Structures.d/IAST.Lect05.d/IAST.Lect05.pdf
+
+
+isYielded(pVoxel::voxelT) = @cxx pVoxel->isYielded()											# Returns true if the stress in this voxel has ever exceeded the yield stress. Technically, this returns true if any of the connected links have yielded since the stress state of the voxel is never expressly calculated
+isFailed(pVoxel::voxelT) = @cxx pVoxel->isFailed()												# Returns true if the stress in this voxel has ever exceeded the failure stress. Technically, this returns true if any of the connected links have failed since the stress state of the voxel is never expressly calculated
+
+
+temperature(pVoxel::voxelT) = @cxx pVoxel->temperature()										# Returns the current temperature of this voxel in degrees Celsius
+setTemperature(pVoxel::voxelT, temp::Real) = @cxx pVoxel->setTemperature(temp)					# Specifies the temperature for this voxel. This adds (or subtracts) the correct amount of thermal energy to leave the voxel at ths specified temperature, but this temperature will not be maintaned without subsequent determines the amount of scaling from the temperature
+
+
+enableFloor(pVoxel::voxelT, enabled::Bool) = @cxx pVoxel->enableFloor()							# Enables this voxel interacting with the floor at Z=0. @param[in] enabled Enable interaction
+isFloorEnabled(pVoxel::voxelT) = @cxx pVoxel->isFloorEnabled()									# Returns true of this voxel will interact with the floor at Z=0
+isFloorStaticFriction(pVoxel::voxelT) = @cxx pVoxel->isFloorStaticFriction()					# Returns true if this voxel is in contact with the floor and stationary in the horizontal directions. This corresponds to that voxel being in the mode of static friction (as opposed to kinetic) with the floor
+floorPenetration(pVoxel::voxelT) = @cxx pVoxel->floorPenetration()								# Returns the interference (in meters) between the collision envelope of this voxel and the floor at Z=0. Positive numbers correspond to interference. If the voxel is not touching the floor 0 is returned
+
+
+dampingMultiplier(pVoxel::voxelT) @cxx pVoxel->dampingMultiplier() 								# Returns the damping multiplier for this voxel. This would normally be called only internally for the internal damping calculations.
 
 
 
@@ -310,27 +399,27 @@ end
 ################# RENDERING FUNCTIONS #################
 #######################################################
 using Makie
-using Makie: AbstractPlotting
+#using Makie: AbstractPlotting
 
 function MeshRender(pVx::vxT)
 	pMesh = @cxx CVX_MeshRender(Vx)
 	@cxx pMesh->generateMesh()
 	return pMesh
 end
-generateMesh(pMesh) = @cxx pMesh->generateMesh()
+generateMesh(pMesh::meshT) = @cxx pMesh->generateMesh()
 
 
-vCount(pMesh) = @cxx pMesh->vCount()
-tCount(pMesh) = @cxx pMesh->tCount()
-cCount(pMesh) = @cxx pMesh->cCount()
+vCount(pMesh::meshT) = @cxx pMesh->vCount()
+tCount(pMesh::meshT) = @cxx pMesh->tCount()
+cCount(pMesh::meshT) = @cxx pMesh->cCount()
 
 
-getVertices(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vCount(pMesh))
-getTriangles(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getTriangles()), tCount(pMesh))
-getColors(pMesh) = unsafe_wrap(Array, (@cxx pMesh->getColors()), cCount(pMesh))
+getVertices(pMesh::meshT) = unsafe_wrap(Array, (@cxx pMesh->getVertices()), vCount(pMesh))
+getTriangles(pMesh::meshT) = unsafe_wrap(Array, (@cxx pMesh->getTriangles()), tCount(pMesh))
+getColors(pMesh::meshT) = unsafe_wrap(Array, (@cxx pMesh->getColors()), cCount(pMesh))
 
 
-function getMesh(pMesh)
+function getMesh(pMesh::meshT)
 	vcount = vCount(pMesh)
 	tcount = tCount(pMesh)
 	ccount = cCount(pMesh)
@@ -357,31 +446,31 @@ function getMesh(pMesh)
 	return coordinates, connectivity, [colormap...]
 end
 
-function eyepos(points)
+function eyepos(points::Matrix{Float32})
 	xpos =  minimum(points[:, 1]) + maximum(points[:, 1]) / 2
 	ypos =  minimum(points[:, 2]) - maximum(points[:, 2])
 	zpos =  minimum(points[:, 3]) + maximum(points[:, 3]) / 2
 	return Vec3f0(xpos, ypos, zpos)
 end
 
-function lookat(points)
+function lookat(points::Matrix{Float32})
 	xpos =  minimum(points[:, 1]) + maximum(points[:, 1]) / 2
 	ypos =  minimum(points[:, 2]) + maximum(points[:, 2]) / 2
 	zpos =  minimum(points[:, 3]) + maximum(points[:, 3]) / 2
 	return Vec3f0(xpos, ypos, zpos)
 end
 
-function setScene(pMesh)
+function setScene(pMesh::meshT)
 	scene = Scene()
 	res = getMesh(pMesh)
 	node = Node(res)
 	scene = mesh!(scene, lift(x -> x[1], node), lift(x -> x[2], node), color=lift(x -> x[3], node))
-	update_cam!(scene, lift(x -> eyepos(x[1]), node).val, lift(x -> lookat(x[1]), node).val)
+	#update_cam!(scene, lift(x -> eyepos(x[1]), node), lift(x -> lookat(x[1]), node))
 	#scene.center = false
 	return scene, node
 end
 
-function render(pMesh, node)
+function render(pMesh::meshT, node)
 	generateMesh(pMesh)
 	push!(node, getMesh(pMesh))
 end
