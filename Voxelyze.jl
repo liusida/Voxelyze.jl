@@ -114,7 +114,7 @@ setVoxel(pVx::vxT, pMaterial::materialT, xIndex::Int, yIndex::Int, zIndex::Int) 
 voxelCount(pVx::vxT) = @cxx pVx->voxelCount()											# Returns the number of voxels currently in this voxelyze object
 #voxelList(pVx::vxT) = @cxx pVx->voxelList()											# Returns a pointer to the internal list of voxels in this voxelyze object
 voxel(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int) = 
-	@cxx pVx->voxel(xIndex, yIndex, xIndex)												# Returns a pointer to the voxel at this location if one exists, or null otherwise
+	@cxx pVx->voxel(xIndex, yIndex, zIndex)												# Returns a pointer to the voxel at this location if one exists, or null otherwise
 voxel(pVx::vxT, voxelIndex::Int) = @cxx pVx->voxel(voxelIndex)							# Returns a pointer to a voxel that has been added to this voxelyze object
 breakLink(pVx::vxT, xIndex::Int, yIndex::Int, zIndex::Int, direction::linkDirection) =
 	@cxx pVx->breakLink(xIndex, yIndex, zIndex, direction)								# Removes the link at this voxel location in the direction indicated if one exists
@@ -272,7 +272,7 @@ alpha(pMaterial::materialT) = @cxx pMaterial->alpha()											# Returns the al
 timeStep(pVoxel::voxelT, dt::Real) = @cxx pVoxel->timeStep(dt) 									# Advances this voxel's state according to all forces and moments acting on it. Large timesteps will cause instability. Use CVoxelyze::recommendedTimeStep() to get the recommended largest stable timestep. @param[in] dt Timestep (in second) to advance.
 
 
-material(pVoxel::voxelT) @cxx pVoxel->material() 												# Returns the linked material object containing the physical properties of this voxel
+material(pVoxel::voxelT) = @cxx pVoxel->material() 												# Returns the linked material object containing the physical properties of this voxel
 linkCount(pVoxel::voxelT) = @cxx pVoxel->linkCount()											# Returns the number of links present for this voxel out of a total 6 possible
 adjacentVoxel(pVoxel::voxelT, direction::linkDirection) = @cxx pVoxel->adjacentVoxel(direction)	# Returns a pointer to the voxel in the specified direction if one exists, or NULL otherwise. Direction Positive or negative X, Y, or Z direction according to the linkDirection
 indexX(pVoxel::voxelT) = @cxx pVoxel->indexX()													# Returns the global X index of this voxel
@@ -390,7 +390,7 @@ isFloorStaticFriction(pVoxel::voxelT) = @cxx pVoxel->isFloorStaticFriction()				
 floorPenetration(pVoxel::voxelT) = @cxx pVoxel->floorPenetration()								# Returns the interference (in meters) between the collision envelope of this voxel and the floor at Z=0. Positive numbers correspond to interference. If the voxel is not touching the floor 0 is returned
 
 
-dampingMultiplier(pVoxel::voxelT) @cxx pVoxel->dampingMultiplier() 								# Returns the damping multiplier for this voxel. This would normally be called only internally for the internal damping calculations.
+dampingMultiplier(pVoxel::voxelT) = @cxx pVoxel->dampingMultiplier() 								# Returns the damping multiplier for this voxel. This would normally be called only internally for the internal damping calculations.
 
 
 

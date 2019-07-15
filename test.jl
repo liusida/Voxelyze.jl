@@ -11,18 +11,19 @@ setColor(pMaterial1, 255, 0, 0)
 setColor(pMaterial2, 0, 255, 0)
 
 voxels = []
-for i in 0:(W-1)
-	for j in 1:(L-1)
+for i in 1:W
+	for j in 1:L
 		push!(voxels, setVoxel(Vx, pMaterial1, i, j, 1))
-		setForce(voxels[end], 0, 0, -2)
+		setForce(voxels[end], 0, 0, -0.2)
 		push!(voxels, setVoxel(Vx, pMaterial2, i, j, 2))
-		setFixedAll(voxels[end])
+		setForce(voxels[end], 0, 0, 0.1)
 	end
 end
 voxels = [voxels...]
+#track = voxel(Vx, 10, 1, 2)
 
-for i in 1:(W-2)
-	for j in 1:(L-1)
+for i in 2:(W-1)
+	for j in 1:L
 		breakLink(Vx, i, j, 1, Z_POS)
 	end
 end
@@ -32,5 +33,9 @@ scene, node = setScene(pMesh)
 record(scene, "output.mp4", 1:2000) do i
 	doTimeStep(Vx)
 	render(pMesh, node)
+	println("or: ", orientation(track))
+	println("orAx: ", orientationAxis(track))
+	println("orAn: ", orientationAngle(track))
+	println()
 end
 
