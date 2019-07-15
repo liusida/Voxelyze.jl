@@ -460,19 +460,44 @@ function lookat(points::Matrix{Float32})
 	return Vec3f0(xpos, ypos, zpos)
 end
 
-function setScene(pMesh::meshT)
+function getPoints(voxels)
+	points = []
+	for vx in voxels
+		c1 = cornerPosition(vx, PPP)
+		c2 = cornerPosition(vx, NNP)
+		v = cross(c1, c2)
+		p1 = position(vx)
+		p2 = p1 .+ 3.*v
+		push!(points, Point3f0(p1...) => Point3f0(p2...))
+	end
+	return [points...]
+end
+
+
+#=
+ points = [
+     Point2f0(0, 0) => Point2f0(5, 5);
+     Point2f0(15, 15) => Point2f0(25, 25);
+     Point2f0(0, 15) => Point2f0(35, 5);
+     ]
+ scene = linesegments(points, color = :red, linewidth = 2)
+=#
+
+function setScene(pMesh::meshT, voxels)
 	scene = Scene()
 	res = getMesh(pMesh)
-	node = Node(res)
-	scene = mesh!(scene, lift(x -> x[1], node), lift(x -> x[2], node), color=lift(x -> x[3], node))
+	points = getPoints(voxels)
+	node = Node((res, points))
+	mesh!(scene, lift(x -> x[1][1], node), lift(x -> x[1][2], node), color=lift(x -> x[1][3], node))
+	linesegments!(scene, lift(x -> x[2], node), color=:green)
 	#update_cam!(scene, lift(x -> eyepos(x[1]), node), lift(x -> lookat(x[1]), node))
 	#scene.center = false
 	return scene, node
 end
 
-function render(pMesh::meshT, node)
+function render(pMesh::meshT, voxels, node)
 	generateMesh(pMesh)
-	push!(node, getMesh(pMesh))
+	push!(node, (getMesh(pMesh), getPoints(voxels)))
 end
 
 

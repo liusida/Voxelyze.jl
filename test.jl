@@ -20,7 +20,7 @@ for i in 1:W
 	end
 end
 voxels = [voxels...]
-#track = voxel(Vx, 10, 1, 2)
+track = voxel(Vx, 10, 1, 2)
 
 for i in 2:(W-1)
 	for j in 1:L
@@ -29,10 +29,10 @@ for i in 2:(W-1)
 end
 
 pMesh = MeshRender(Vx)
-scene, node = setScene(pMesh)
+scene, node = setScene(pMesh, voxels)
 record(scene, "output.mp4", 1:2000) do i
 	doTimeStep(Vx)
-	render(pMesh, node)
+	render(pMesh, voxels, node)
 	println("or: ", orientation(track))
 	println("orAx: ", orientationAxis(track))
 	println("orAn: ", orientationAngle(track))
