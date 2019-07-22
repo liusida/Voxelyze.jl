@@ -1,6 +1,7 @@
 # Voxelyze.jl a wrapper around the Voxelyze Library
 using Cxx
 using Libdl
+using LinearAlgebra
 
 
 
@@ -137,7 +138,7 @@ link(pVx::vxT, linkIndex::Int) = @cxx pVx->link(linkIndex)								# Returns a po
 
 
 setVoxelSize(pVx::vxT, voxelSize::Real) = @cxx pVx->setVoxelSize(voxelSize)				# Sets the base voxel size for the entire voxelyze object
-setGravity(pVx::vxT, g::Real) = @cxx pVx->setGravity(g)									# Set the gravity of the voxelyze engine
+setGravity(pVx::vxT, g::Real) = @cxx pVx->setGravity(g)									# Sets the gravitational acceleration to apply to all voxels. Gravity acts in the -Z direction. Set to 0 to disable. @param[in] g Gravitational acceleration in g's. 1 g = -9.80665 m/s^2
 setAmbientTemperature(pVx::vxT, temperature::Real) = 
 	@cxx pVx->setAmbientTemperature(temperature, true)									# Set the ambient temperature of the voxelyze engine
 setAmbientTemperature(pVx::vxT, temperature::Real, allVoxels::Bool) = 
@@ -390,7 +391,7 @@ isFloorStaticFriction(pVoxel::voxelT) = @cxx pVoxel->isFloorStaticFriction()				
 floorPenetration(pVoxel::voxelT) = @cxx pVoxel->floorPenetration()								# Returns the interference (in meters) between the collision envelope of this voxel and the floor at Z=0. Positive numbers correspond to interference. If the voxel is not touching the floor 0 is returned
 
 
-dampingMultiplier(pVoxel::voxelT) = @cxx pVoxel->dampingMultiplier() 								# Returns the damping multiplier for this voxel. This would normally be called only internally for the internal damping calculations.
+dampingMultiplier(pVoxel::voxelT) = @cxx pVoxel->dampingMultiplier() 							# Returns the damping multiplier for this voxel. This would normally be called only internally for the internal damping calculations.
 
 
 
@@ -463,12 +464,14 @@ end
 function getPoints(voxels)
 	points = []
 	for vx in voxels
-		c1 = cornerPosition(vx, PPP)
-		c2 = cornerPosition(vx, NNP)
-		v = cross(c1, c2)
-		p1 = position(vx)
-		p2 = p1 .+ 3.*v
-		push!(points, Point3f0(p1...) => Point3f0(p2...))
+		p1 = cornerPosition(vx, PPN)
+		p2 = cornerPosition(vx, NPN)
+		p3 = cornerPosition(vx, PNN)
+		x = p2-p1
+		y = p3-p1
+		n = -100 .* cross(x, y)
+		p = position(vx)
+		push!(points, Point3f0(p...) => Point3f0((p .+ n)...))
 	end
 	return [points...]
 end
@@ -486,10 +489,11 @@ end
 function setScene(pMesh::meshT, voxels)
 	scene = Scene()
 	res = getMesh(pMesh)
-	points = getPoints(voxels)
-	node = Node((res, points))
-	mesh!(scene, lift(x -> x[1][1], node), lift(x -> x[1][2], node), color=lift(x -> x[1][3], node))
-	linesegments!(scene, lift(x -> x[2], node), color=:green)
+	#points = getPoints(voxels)
+	#node = Node((res, points))
+	node = Node(res)
+	mesh!(scene, lift(x -> x[1], node), lift(x -> x[2], node), color=lift(x -> x[3], node))
+	#linesegments!(scene, lift(x -> x[2], node), color=:blue)
 	#update_cam!(scene, lift(x -> eyepos(x[1]), node), lift(x -> lookat(x[1]), node))
 	#scene.center = false
 	return scene, node
@@ -497,7 +501,8 @@ end
 
 function render(pMesh::meshT, voxels, node)
 	generateMesh(pMesh)
-	push!(node, (getMesh(pMesh), getPoints(voxels)))
+	#push!(node, (getMesh(pMesh), getPoints(voxels)))
+	push!(node, getMesh(pMesh))
 end
 
 
