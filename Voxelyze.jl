@@ -464,12 +464,12 @@ end
 function getPoints(voxels)
 	points = []
 	for vx in voxels
-		p1 = cornerPosition(vx, PPN)
-		p2 = cornerPosition(vx, NPN)
-		p3 = cornerPosition(vx, PNN)
+		p1 = cornerPosition(vx, PPP)
+		p2 = cornerPosition(vx, NPP)
+		p3 = cornerPosition(vx, PNP)
 		x = p2-p1
 		y = p3-p1
-		n = -100 .* cross(x, y)
+		n = 200 .* cross(x, y)
 		p = position(vx)
 		push!(points, Point3f0(p...) => Point3f0((p .+ n)...))
 	end
@@ -489,11 +489,11 @@ end
 function setScene(pMesh::meshT, voxels)
 	scene = Scene()
 	res = getMesh(pMesh)
-	#points = getPoints(voxels)
-	#node = Node((res, points))
-	node = Node(res)
-	mesh!(scene, lift(x -> x[1], node), lift(x -> x[2], node), color=lift(x -> x[3], node))
-	#linesegments!(scene, lift(x -> x[2], node), color=:blue)
+	points = getPoints(voxels)
+	node = Node((res, points))
+	#node = Node(res)
+	mesh!(scene, lift(x -> x[1][1], node), lift(x -> x[1][2], node), color=lift(x -> x[1][3], node))
+	linesegments!(scene, lift(x -> x[2], node), color=:blue)
 	#update_cam!(scene, lift(x -> eyepos(x[1]), node), lift(x -> lookat(x[1]), node))
 	#scene.center = false
 	return scene, node
@@ -501,8 +501,8 @@ end
 
 function render(pMesh::meshT, voxels, node)
 	generateMesh(pMesh)
-	#push!(node, (getMesh(pMesh), getPoints(voxels)))
-	push!(node, getMesh(pMesh))
+	push!(node, (getMesh(pMesh), getPoints(voxels)))
+	#push!(node, getMesh(pMesh))
 end
 
 
