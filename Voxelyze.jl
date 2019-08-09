@@ -403,7 +403,7 @@ using Makie
 #using Makie: AbstractPlotting
 
 function MeshRender(pVx::vxT)
-	pMesh = @cxx CVX_MeshRender(Vx)
+	pMesh = @cxx CVX_MeshRender(pVx)
 	@cxx pMesh->generateMesh()
 	return pMesh
 end
@@ -477,32 +477,19 @@ function getPoints(voxels)
 end
 
 
-#=
- points = [
-     Point2f0(0, 0) => Point2f0(5, 5);
-     Point2f0(15, 15) => Point2f0(25, 25);
-     Point2f0(0, 15) => Point2f0(35, 5);
-     ]
- scene = linesegments(points, color = :red, linewidth = 2)
-=#
-
-function setScene(pMesh::meshT, voxels)
+function setScene(pMesh::meshT)
 	scene = Scene()
 	res = getMesh(pMesh)
-	points = getPoints(voxels)
-	node = Node((res, points))
-	#node = Node(res)
-	mesh!(scene, lift(x -> x[1][1], node), lift(x -> x[1][2], node), color=lift(x -> x[1][3], node))
-	linesegments!(scene, lift(x -> x[2], node), color=:blue)
+	node = Node(res)
+	mesh!(scene, lift(x -> x[1], node), lift(x -> x[2], node), color=lift(x -> x[3], node))
 	#update_cam!(scene, lift(x -> eyepos(x[1]), node), lift(x -> lookat(x[1]), node))
 	#scene.center = false
 	return scene, node
 end
 
-function render(pMesh::meshT, voxels, node)
+function render(pMesh::meshT, node)
 	generateMesh(pMesh)
-	push!(node, (getMesh(pMesh), getPoints(voxels)))
-	#push!(node, getMesh(pMesh))
+	push!(node, getMesh(pMesh))
 end
 
 
