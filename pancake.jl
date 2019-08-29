@@ -1,7 +1,17 @@
 include("Voxelyze.jl")
 
+const MAX_INF = 2.4
+const MIN_INF = 0.2
+const INF_RATE = 0.00015
+const MAX_ST_FRIC = 2.0
+const MIN_ST_FRIC = 0.0001
+const MAX_K_FRIC = 2.0
+const MIN_K_FRIC = 0.0001
+const MAX_PRESS = 25000
+
 mutable struct Sim
 	Vx
+	dt
 	vxMass
 	skinMat
 	varMat
@@ -21,36 +31,41 @@ function Sim(vx_size, W, L, E, ρ)
 	enableFloor(Vx, true)
 	enableCollisions(Vx, true)
 	setGravity(Vx, 0)
+	setAmbientTemperature(Vx, 1)
 	mats, voxs = setVoxels(Vx, W, L, E, ρ)
-	return Sim(Vx, vx_size^3 * ρ, mats[1], mats[2], mats[3], voxs[1], voxs[2], voxs[3], voxs[4], [0., 0., 0.], 0, zeros(10, 1))
+	return Sim(Vx, recommendedTimeStep(Vx)/2, vx_size^3 * ρ, mats[1], mats[2], mats[3], voxs[1], voxs[2], voxs[3], voxs[4], [0., 0., 0.], 0, zeros(10, 10))
 end
 
 #                      Vx, 18 28 592949 1080
 function setVoxels(Vx, W, L, E,     ρ)
 	skin = addMaterial(Vx, E, ρ)
+	setPoissonsRatio(skin, 0.35)
 	setColor(skin, 0, 255, 0)
-	setInternalDamping(skin, 0.8)
-	setCollisionDamping(skin, 0.8)
-	setStaticFriction(skin, 0.5)
-	setKineticFriction(skin, 0.5)
+	setGlobalDamping(skin, 0.0001)
+	setInternalDamping(skin, 1.0)
+	setCollisionDamping(skin, 1.0)
+	setStaticFriction(skin, MAX_ST_FRIC)
+	setKineticFriction(skin, MAX_K_FRIC)
 	
 	varF = [addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ)]
+	map(mat -> setPoissonsRatio(mat, 0.35), varF)
 	map(mat -> setColor(mat, 0, 255, 0), varF)
-	map(mat -> setInternalDamping(mat, 0.8), varF)
-	map(mat -> setCollisionDamping(mat, 0.8), varF)
-	map(mat -> setExternalScaleFactor(mat, 1.0, 1.0, 1.5), varF)
-	map(mat -> setStaticFriction(mat, 0.5), varF)
-	map(mat -> setKineticFriction(mat, 0.5), varF)
+	map(mat -> setGlobalDamping(mat, 0.0001), varF)
+	map(mat -> setInternalDamping(mat, 1.0), varF)
+	map(mat -> setCollisionDamping(mat, 1.0), varF)
+	map(mat -> setStaticFriction(mat, MIN_ST_FRIC), varF)
+	map(mat -> setKineticFriction(mat, MIN_K_FRIC), varF)
 
 	
 	sacs = [addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ),
 			addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ)]
+	map(mat -> setPoissonsRatio(mat, 0.35), sacs)
 	map(mat -> setColor(mat, 0, 0, 255), sacs)
-	map(mat -> setInternalDamping(mat, 0.8), sacs)
-	map(mat -> setCollisionDamping(mat, 0.8), sacs)
-	map(mat -> setExternalScaleFactor(mat, 1.0, 1.0, 0.25), sacs)
+	map(mat -> setGlobalDamping(mat, 0.0001), sacs)
+	map(mat -> setInternalDamping(mat, 1.0), sacs)
+	map(mat -> setCollisionDamping(mat, 1.0), sacs)
 	map(mat -> setStaticFriction(mat, 0.5), sacs)
-	map(mat -> setKineticFriction(mat, 0.5), sacs)
+	map(mat -> setKineticFriction(mat, 0.4), sacs)
 	
 
 	voxels = []
@@ -58,10 +73,10 @@ function setVoxels(Vx, W, L, E,     ρ)
 	bottomLayer = []
 	for x in 1:W
 		for y in 1:L
-			if y == 1 || y == 2
+			if y == 1 || y == 2 || y == 3
 				push!(bottomLayer, setVoxel(Vx, varF[1], x, y, 2))
 				push!(topLayer, setVoxel(Vx, varF[1], x, y, 3))
-			elseif y == L || y == L-1
+			elseif y == L || y == L-1 || y == L-2
 				push!(bottomLayer, setVoxel(Vx, varF[2], x, y, 2))
 				push!(topLayer, setVoxel(Vx, varF[2], x, y, 3))
 			else
@@ -71,17 +86,18 @@ function setVoxels(Vx, W, L, E,     ρ)
 		end
 	end
 
+	#111011101110111
 	#123456789012345678
 	#111001110011100111
 	airsacs = []
 	i = 1
 	for x in 1:W
-		if x in [4, 5, 9, 10, 14, 15]
-			if x in [5, 10, 15]
+		if x in [4, 8, 12] #[4, 5, 9, 10, 14, 15]
+			if x in [4, 8, 12] #[5, 10, 15]
 				i += 1
 			end
 		else
-			for y in 3:L-2
+			for y in 4:L-3
 				push!(airsacs, setVoxel(Vx, sacs[i], x, y, 4))
 				push!(airsacs, setVoxel(Vx, sacs[i], x, y, 5))
 
@@ -121,11 +137,62 @@ function setEnv(sim, slope, orientation)
 	ϕ = orientation
 	g = polar_cart(r, θ, ϕ)
 
-	gravity = 2 .* g .* sim.vxMass
+	gravity = 1 .* g .* sim.vxMass
 	for vx in sim.voxels
 		setForce(vx, gravity...)
 	end
 	sim.gravity = gravity
+end
+
+
+function setPressure(sim, pressure)
+	sim.pressure = pressure
+end
+
+function setActuactionMatrix(sim, matrix)
+	@assert(size(matrix)[1] == 10)
+	@assert(size(matrix)[2] > 0)
+	sim.actMatrix = matrix
+end
+
+function initialize(sim)
+	nodes = []
+	pMesh = MeshRender(sim.Vx)
+	generateMesh(pMesh)
+	push!(nodes, getMesh(pMesh))
+	for i in 1.0:-0.001:MIN_INF
+		map(mat -> setExternalScaleFactor(mat, 1.0, 1.0, i), sim.sacsMat)
+		t = ambientTemperature(sim.Vx)
+		setAmbientTemperature(sim.Vx, t)
+		map(vx -> setForce(vx, sim.gravity...), sim.bottomVoxels)
+		map(vx -> setForce(vx, sim.gravity...), sim.topVoxels)
+		map(vx -> setForce(vx, (sim.gravity./50)...), sim.sacVoxels)
+		doTimeStep(sim.Vx, sim.dt)
+		if i % 100 == 0
+			generateMesh(pMesh)
+			push!(nodes, getMesh(pMesh))
+		end
+	end
+	for i in 0:2:sim.pressure
+		applyPressure(sim, i)
+		map(vx -> setForce(vx, (sim.gravity./50)...), sim.sacVoxels)
+		doTimeStep(sim.Vx, sim.dt)
+		if i % 100 == 0
+			generateMesh(pMesh)
+			push!(nodes, getMesh(pMesh))
+		end
+	end
+	map(mat -> setGlobalDamping(mat, 0), sim.varMat)
+	map(mat -> setGlobalDamping(mat, 0), sim.sacsMat)
+	setGlobalDamping(sim.skinMat, 0)
+	for i in 1:2000
+		step(sim)
+		if i % 100 == 0
+			generateMesh(pMesh)
+			push!(nodes, getMesh(pMesh))
+		end
+	end
+	return nodes
 end
 
 function applyPressure(sim, pressure)
@@ -151,58 +218,140 @@ function applyPressure(sim, pressure)
 	end
 end
 
-function setPressure(sim, pressure)
-	sim.pressure = pressure
+function step(sim)
+	t = ambientTemperature(sim.Vx)
+	setAmbientTemperature(sim.Vx, t)
+	applyPressure(sim, sim.pressure)
+	map(vx -> setForce(vx, (sim.gravity./50)...), sim.sacVoxels)
+	doTimeStep(sim.Vx, sim.dt)
 end
 
-function setActuactionMatrix(sim, matrix)
-	@assert(size(matrix)[1] == 10)
-	@assert(size(matrix)[2] > 0)
-	sim.actMatrix = matrix
+function increaseFric(mat)
+	setStaticFriction(mat, MAX_ST_FRIC)
+	setKineticFriction(mat, MAX_K_FRIC)
+	#setExternalScaleFactor(mat, 1.0, 1.0, 1.4)
+	true
 end
 
-function initialize(sim)
-	gSave = sim.gravity
-	sim.gravity = 2 .* [0., 0., -9.80665] .* sim.vxMass
-	for i in 1:50
-		doTimeStep(sim.Vx)
-		if i % 5 == 0
-			map(haltMotion, sim.voxels)
+function decreaseFric(mat)
+	setStaticFriction(mat, MIN_ST_FRIC)
+	setKineticFriction(mat, MIN_K_FRIC)
+	#setExternalScaleFactor(mat, 1.0, 1.0, 1.0)
+	true
+end
+
+function stretchCoef(pressure)
+	a = 1.5
+	b = 3.5
+	return (b - a) * ((pressure - 0)/(MAX_PRESS- 0)) + a
+end
+
+function inflate(mat)
+	ext = externalScaleFactor(mat)
+	inf = [INF_RATE/35, INF_RATE/stretchCoef(sim.pressure), INF_RATE]
+	if ext[3] >= MAX_INF
+		return true
+	else
+		setExternalScaleFactor(mat, (ext .+ inf)...)
+	end
+	return false
+end
+
+function deflate(mat)
+	ext = externalScaleFactor(mat)
+	inf = [INF_RATE/35, INF_RATE/stretchCoef(sim.pressure), INF_RATE]
+	if ext[3] <= MIN_INF
+		return true
+	else
+		setExternalScaleFactor(mat, (ext .- inf)...)
+	end
+	return false
+end
+
+function run(sim; save=false)
+	nodes = []
+	pMesh = Nothing
+	if save
+		pMesh = MeshRender(sim.Vx)
+		generateMesh(pMesh)
+		push!(nodes, getMesh(pMesh))
+	end
+	for i in 1:12#size(sim.actMatrix)[2]
+		println(i)
+		act = sim.actMatrix[:, i]
+		done = zeros(Bool, 8)
+		for j in 1:2
+			act[8+j] == 0 && decreaseFric(sim.varMat[j])
+			act[8+j] == 1 && increaseFric(sim.varMat[j])
+		end
+		k = 0
+		while sum(done) < 8
+			for j in 1:8
+				if act[j] == 0
+					done[j] = deflate(sim.sacsMat[j])
+				elseif act[j] == 1
+					done[j] = inflate(sim.sacsMat[j])
+				end
+			end
+			step(sim)
+			if save && k % 100 == 0
+				generateMesh(pMesh)
+				push!(nodes, getMesh(pMesh))
+			end
+			k += 1
+		end
+		for i in 0:2000
+			step(sim)
+			if save && i % 100 == 0
+				generateMesh(pMesh)
+				push!(nodes, getMesh(pMesh))
+			end
 		end
 	end
-	for i in 1:sim.pressure*2
-		applyPressure(sim, i/2)
-		doTimeStep(sim.Vx)
-	end
-	for i in 1:1000
-		step(sim)
-	end
-	sim.gravity = gSave
-	for i in 1:5000
-		step(sim)
-	end
+	return nodes
 end
 
-function run(sim)
+inch_matrix = [
+		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0;
+		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		]
 
-end
+roll_matrix = [
+			0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1;
+			0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0;
+			0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0;
+			0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0;
+			1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0;
+			0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0;
+			0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0;
+			0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0;
+			0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+			0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		]
 
-function step(sim)
-	applyPressure(sim, sim.pressure)
-	doTimeStep(sim.Vx)
-end
-
-sim = Sim(0.006, 18, 28, 592949, 1080)
-setEnv(sim, 15, 0)
-setPressure(sim, 7000)
-initialize(sim)
-
-pMesh = MeshRender(sim.Vx)
-scene, node = setScene(pMesh)
-record(scene, "output.mp4", 1:5000) do i
-	println(i)
-	step(sim)
-	render(pMesh, node)
+#sim = Sim(0.05, 18, 28, 1000000, 10000)
+sim = Sim(0.1, 15, 24, 592949, 3000)
+setEnv(sim, 0, 0)
+setPressure(sim, 0)#MAX_PRESS
+setActuactionMatrix(sim, inch_matrix)
+nodes = initialize(sim)
+nodes = [nodes..., (run(sim; save=true))...]
+scene = Scene()
+n = Node(nodes[1])
+mesh!(scene, lift(x -> x[1], n), lift(x -> x[2], n), color=lift(x -> x[3], n))
+#update_cam!(scene, lift(x -> eyepos(x[1]), node), lift(x -> lookat(x[1]), node))
+#scene.center = false
+println(recommendedTimeStep(sim.Vx))
+record(scene, "output.mp4", 2:1:length(nodes)) do i
+	push!(n, nodes[i])
 end
 
 

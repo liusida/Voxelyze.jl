@@ -323,7 +323,7 @@ function displacement(pVoxel::voxelT)
 	vec3D = @cxx pVoxel->displacement()															# Returns the 3D displacement of this voxel from its original location in meters (GCS)
 	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
 end
-function size(pVoxel::voxelT)
+function voxelSize(pVoxel::voxelT)
 	vec3D = @cxx pVoxel->size()																	# Returns the current deformed size of this voxel in the local voxel coordinates system (LCS). If asymmetric forces are acting on this voxel, the voxel may not be centered on position(). Use cornerNegative() and cornerPositive() to determine this information
 	[(@cxx vec3D->x), (@cxx vec3D->y), (@cxx vec3D->z)]
 end
