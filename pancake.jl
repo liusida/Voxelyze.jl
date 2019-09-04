@@ -2,11 +2,11 @@ include("Voxelyze.jl")
 
 const MAX_INF = 2.4
 const MIN_INF = 0.2
-const INF_RATE = 0.00015
+const INF_RATE = 0.00012
 const MAX_ST_FRIC = 2.0
-const MIN_ST_FRIC = 0.0001
+const MIN_ST_FRIC = 0.4
 const MAX_K_FRIC = 2.0
-const MIN_K_FRIC = 0.0001
+const MIN_K_FRIC = 0.3
 const MAX_PRESS = 25000
 
 mutable struct Sim
@@ -47,7 +47,7 @@ function setVoxels(Vx, W, L, E,     ρ)
 	setStaticFriction(skin, MAX_ST_FRIC)
 	setKineticFriction(skin, MAX_K_FRIC)
 	
-	varF = [addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ)]
+	varF = [addMaterial(Vx, E*1.8, ρ), addMaterial(Vx, E*1.8, ρ)]
 	map(mat -> setPoissonsRatio(mat, 0.35), varF)
 	map(mat -> setColor(mat, 0, 255, 0), varF)
 	map(mat -> setGlobalDamping(mat, 0.0001), varF)
@@ -119,7 +119,7 @@ end
 
 function polar_cart(r, θ, ϕ)
 	x = r*sind(θ)*cosd(ϕ)
-	y = r*sind(θ)*sind(θ)
+	y = r*sind(θ)*sind(ϕ)
 	z = r*cosd(θ)
 	return [x, y, z]
 end
@@ -160,6 +160,8 @@ function initialize(sim)
 	pMesh = MeshRender(sim.Vx)
 	generateMesh(pMesh)
 	push!(nodes, getMesh(pMesh))
+	gsave = sim.gravity
+	sim.gravity = [0, 0, -9.80665] .* sim.vxMass
 	for i in 1.0:-0.001:MIN_INF
 		map(mat -> setExternalScaleFactor(mat, 1.0, 1.0, i), sim.sacsMat)
 		t = ambientTemperature(sim.Vx)
@@ -192,6 +194,7 @@ function initialize(sim)
 			push!(nodes, getMesh(pMesh))
 		end
 	end
+	sim.gravity = gsave
 	return nodes
 end
 
@@ -241,7 +244,7 @@ function decreaseFric(mat)
 end
 
 function stretchCoef(pressure)
-	a = 1.5
+	a = 1.6
 	b = 3.5
 	return (b - a) * ((pressure - 0)/(MAX_PRESS- 0)) + a
 end
@@ -276,7 +279,7 @@ function run(sim; save=false)
 		generateMesh(pMesh)
 		push!(nodes, getMesh(pMesh))
 	end
-	for i in 1:12#size(sim.actMatrix)[2]
+	for i in 1:8#size(sim.actMatrix)[2]
 		println(i)
 		act = sim.actMatrix[:, i]
 		done = zeros(Bool, 8)
@@ -300,7 +303,7 @@ function run(sim; save=false)
 			end
 			k += 1
 		end
-		for i in 0:2000
+		for i in 0:4000
 			step(sim)
 			if save && i % 100 == 0
 				generateMesh(pMesh)
@@ -312,16 +315,16 @@ function run(sim; save=false)
 end
 
 inch_matrix = [
-		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
-		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
-		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
-		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
-		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
-		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
-		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
-		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
-		  	1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0;
-		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+		  	0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0;
+		  	1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1;
 		]
 
 roll_matrix = [
