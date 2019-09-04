@@ -76,7 +76,7 @@ julia example.jl
 To run the c++ example (in case you are interested) you would do the following in the terminal:
 ```bash
 make
-clang++ example.cpp -I./include -L.lib -lvoxelyze
+clang++ example.cpp -I./include -L./lib -lvoxelyze
 ./a.out
 ```
 

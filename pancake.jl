@@ -4,7 +4,7 @@ const MAX_INF = 2.4
 const MIN_INF = 0.2
 const INF_RATE = 0.00012
 const MAX_ST_FRIC = 2.0
-const MIN_ST_FRIC = 0.4
+const MIN_ST_FRIC = 0.3
 const MAX_K_FRIC = 2.0
 const MIN_K_FRIC = 0.3
 const MAX_PRESS = 25000
@@ -47,7 +47,7 @@ function setVoxels(Vx, W, L, E,     ρ)
 	setStaticFriction(skin, MAX_ST_FRIC)
 	setKineticFriction(skin, MAX_K_FRIC)
 	
-	varF = [addMaterial(Vx, E*1.8, ρ), addMaterial(Vx, E*1.8, ρ)]
+	varF = [addMaterial(Vx, E, ρ), addMaterial(Vx, E, ρ)]
 	map(mat -> setPoissonsRatio(mat, 0.35), varF)
 	map(mat -> setColor(mat, 0, 255, 0), varF)
 	map(mat -> setGlobalDamping(mat, 0.0001), varF)
@@ -279,7 +279,7 @@ function run(sim; save=false)
 		generateMesh(pMesh)
 		push!(nodes, getMesh(pMesh))
 	end
-	for i in 1:8#size(sim.actMatrix)[2]
+	for i in 1:4#size(sim.actMatrix)[2]
 		println(i)
 		act = sim.actMatrix[:, i]
 		done = zeros(Bool, 8)
@@ -342,7 +342,7 @@ roll_matrix = [
 
 #sim = Sim(0.05, 18, 28, 1000000, 10000)
 sim = Sim(0.1, 15, 24, 592949, 3000)
-setEnv(sim, 0, 0)
+setEnv(sim, 15, 90)
 setPressure(sim, 0)#MAX_PRESS
 setActuactionMatrix(sim, inch_matrix)
 nodes = initialize(sim)
