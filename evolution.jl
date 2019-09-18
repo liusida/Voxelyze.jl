@@ -6,7 +6,7 @@ include("pancakerobot.jl")
 addprocs(300)
 
 const ARG_ENV = parse(Float64, ARGS[1])
-const GENERATIONS = 1000
+const GENERATIONS = 100000
 const RATE = [2.0, 2.0, 2.0]
 
 function init_population(n)
@@ -60,7 +60,7 @@ function survival_fit((p_fit, c_fit))
 	end
 end
 
-parents = init_population(2)
+parents = init_population(50)
 p_fits = pmap(p -> fitness(p, ARG_ENV), parents)
 for g in 1:GENERATIONS
 	global parents, p_fits
