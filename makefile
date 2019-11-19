@@ -44,6 +44,7 @@ all: $(VOXELYZE_LIB_NAME).so $(VOXELYZE_LIB_NAME).a
 
 # Make shared dynamic library
 $(VOXELYZE_LIB_NAME).so:	$(VOXELYZE_OBJS)
+	@[ -d lib ] || mkdir lib
 	$(CC) -shared $(INCLUDE) -o lib/$@ $^
 
 # Make a static library
