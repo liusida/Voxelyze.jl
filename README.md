@@ -90,9 +90,12 @@ clang++ example.cpp -I./include -L./lib -lvoxelyze
 
 Sida's test environment:
 
-Ubuntu 19.10
-Julia 1.2 (Compiled with flag `USE_BINARYBUILDER=0`)
-Cxx v0.3.3
-Makie v0.9.5
+* Ubuntu 19.10
+
+* Julia 1.2 (Compiled with flag `USE_BINARYBUILDER=0`)
+
+* Cxx v0.3.3
+
+* Makie v0.9.5
 
 And I change `clang++` to `g++` in the `Makefile`
