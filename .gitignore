@@ -8,6 +8,7 @@
 *.a
 *.so
 *.DS_Store
+*.d
 
 # Packages #
 ############
