@@ -10,7 +10,7 @@ using LinearAlgebra
 ################## LOADING LIBRARY ####################
 #######################################################
 
-const path = pwd()
+const path = @__DIR__
 const path_to_header = path * "/include"
 const path_to_lib = path * "/lib"
 addHeaderDir(path_to_header, kind=C_User)
