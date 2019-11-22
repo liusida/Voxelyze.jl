@@ -1,32 +1,10 @@
-# to run the experiment faster several times:
-# ```
-# julia
-# include("exp.jl")
-# ```
-# change the source code, and use include to run again:
-# ```
-# include("exp.jl")
-# ```
-# this will skip the progress of reload Cxx and Voxelyze.so
-#
 include("../Voxelyze.jl")
 
-# Question: Why the blob fall through the ground?
-function main()
-        
-    Vx = Voxelyze(0.005)							# 5mm voxels
-    enableFloor(Vx, true)
-    enableCollisions(Vx, true)
-    setGravity(Vx, 10)
+# Question: Why the time seems frozen after I add Blob B?
 
-    pGround = addMaterial(Vx, 10000, 10000)
-    setColor(pGround, 100,100,100)
-    for i=-20:20
-        for j=-20:20
-            v = setVoxel(Vx, pGround, i,j,-1)
-            setFixedAll(v)
-        end
-    end
+function main()
+    Vx = Voxelyze(0.005)							# 5mm voxels
+    setGravity(Vx, 1)   #Is g=1 normal?
 
     function blob(Vx, youngsModulus, density, offset=0)
         pMaterial = addMaterial(Vx, youngsModulus, density)
@@ -42,8 +20,9 @@ function main()
         end
     end
 
-    blob(Vx, 1e3, 1e4, 10)
-    blob(Vx, 1, 1, -10)
+    blob(Vx, 1, 1e2, 10) # Blob A.
+
+    #blob(Vx, 1e7, 1e2, -10) # Blob B. After I add this blob, why time frozen? Does adding this blob have effect on Blob A?
 
     pMesh = MeshRender(Vx)
     scene, node = setScene(pMesh)
