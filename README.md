@@ -85,3 +85,14 @@ clang++ example.cpp -I./include -L./lib -lvoxelyze
 **CHANGE COMPILER**: On line 4 in the makefile you can define your compiler with CC=(gcc | g++ | etc), where the current is CC=clang++ 
 
 **ENABLE MULTITHREADING**: On line 6 in the makefile you can define "USE_OMP" by adding the flag -DUSE_OMP=1 to the FLAGS variable
+
+### Extra Notes from Sida
+
+Sida's test environment:
+
+Ubuntu 19.10
+Julia 1.2 (Compiled with flag `USE_BINARYBUILDER=0`)
+Cxx v0.3.3
+Makie v0.9.5
+
+And I change `clang++` to `g++` in the `Makefile`
