@@ -12,8 +12,7 @@
 include("../Voxelyze.jl")
 
 # Question: Why the blob fall through the ground?
-function main()
-        
+function exp1()
     Vx = Voxelyze(0.005)							# 5mm voxels
     enableFloor(Vx, true)
     enableCollisions(Vx, true)
@@ -54,4 +53,4 @@ function main()
     end
 end
 
-main()
+exp1()

@@ -2,7 +2,7 @@ include("../Voxelyze.jl")
 
 # Question: Why the time seems frozen after I add Blob B?
 
-function main()
+function exp2()
     Vx = Voxelyze(0.005)							# 5mm voxels
     setGravity(Vx, 1)   #Is g=1 normal?
 
@@ -33,4 +33,4 @@ function main()
     end
 end
 
-main()
+exp2()
