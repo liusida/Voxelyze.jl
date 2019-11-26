@@ -8,10 +8,12 @@ Here is Sida's test environment:
 
 * Ubuntu 19.10
 
+* Install gcc-8, g++-8, gfortran-8 for compiling Julia
+
 * Julia 1.2 (Compiled with flag `USE_BINARYBUILDER=0`)
 
-* Cxx v0.3.3
+* in Julia REPL, install Pkg Cxx v0.3.3 and Makie v0.9.5
 
-* Makie v0.9.5
+* Atom and Juno for IDE
 
 And I change `clang++` to `g++` in the `Makefile`
