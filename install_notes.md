@@ -8,7 +8,7 @@ Here is Sida's test environment:
 
 * Ubuntu 19.10
 
-* Install gcc-8, g++-8, gfortran-8 for compiling Julia
+* Install gcc-8, g++-8, gfortran-8, m4 for compiling Julia
 
 * Julia 1.2 (Compiled with flag `USE_BINARYBUILDER=0`)
 
